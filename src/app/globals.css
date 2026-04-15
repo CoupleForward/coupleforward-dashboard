@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+@theme inline {
+  /* Brand palette */
+  --color-bg: #1a1a1a;
+  --color-bg-soft: #1f1f1f;
+  --color-card: #2a2a2a;
+  --color-card-2: #242424;
+  --color-card-hover: #333333;
+  --color-line: #3a3a3a;
+  --color-line-soft: #2f2f2f;
+
+  --color-gold: #c8963e;
+  --color-gold-bright: #e0ad4a;
+  --color-gold-soft: #c8963e1f;
+
+  --color-cream: #f5f0e8;
+  --color-cream-dim: #d7cdbc;
+  --color-cream-mute: #8a8275;
+
+  --font-sans: "Inter", "DM Sans", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --radius-card: 12px;
+}
+
+html,
+body {
+  background: var(--color-bg);
+  color: var(--color-cream);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Subtle scrollbars for the dark theme */
+*::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #3a3a3a;
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
