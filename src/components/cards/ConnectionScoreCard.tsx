@@ -1,9 +1,10 @@
 import { Card } from "../Card";
 
-const SCORE = 78;
 const MAX = 100;
 
-export function ConnectionScoreCard() {
+// score: 0–100 (average of each partner's latest closeness rating × 10),
+// or null before the first completed huddle.
+export function ConnectionScoreCard({ score }: { score: number | null }) {
   // Half-circle gauge: arc spans 180deg.
   const radius = 70;
   const cx = 90;
@@ -13,9 +14,8 @@ export function ConnectionScoreCard() {
   const endX = cx + radius;
   const endY = cy;
 
-  // Fraction filled
-  const fraction = Math.max(0, Math.min(1, SCORE / MAX));
-  // Angle in radians, sweeping from 180deg (left) to 0deg (right)
+  const value = score ?? 0;
+  const fraction = Math.max(0, Math.min(1, value / MAX));
   const angle = Math.PI * (1 - fraction);
   const fillX = cx + radius * Math.cos(angle);
   const fillY = cy - radius * Math.sin(angle);
@@ -41,19 +41,29 @@ export function ConnectionScoreCard() {
               strokeLinecap="round"
             />
             {/* fill */}
-            <path
-              d={`M ${startX} ${startY} A ${radius} ${radius} 0 ${largeArc} 1 ${fillX} ${fillY}`}
-              fill="none"
-              stroke="#c8963e"
-              strokeWidth="10"
-              strokeLinecap="round"
-            />
+            {fraction > 0 && (
+              <path
+                d={`M ${startX} ${startY} A ${radius} ${radius} 0 ${largeArc} 1 ${fillX} ${fillY}`}
+                fill="none"
+                stroke="#c8963e"
+                strokeWidth="10"
+                strokeLinecap="round"
+              />
+            )}
           </svg>
           <div className="absolute inset-x-0 bottom-1 text-center">
-            <span className="text-[26px] font-semibold text-cream tabular-nums">
-              {SCORE}
-            </span>
-            <span className="text-cream-mute text-[13px]">/{MAX}</span>
+            {score === null ? (
+              <span className="text-[12px] text-cream-mute">
+                Complete a Huddle
+              </span>
+            ) : (
+              <>
+                <span className="text-[26px] font-semibold text-cream tabular-nums">
+                  {value}
+                </span>
+                <span className="text-cream-mute text-[13px]">/{MAX}</span>
+              </>
+            )}
           </div>
         </div>
       </div>

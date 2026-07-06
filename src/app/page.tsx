@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { Header } from "@/components/Header";
 import { MobileNav } from "@/components/MobileNav";
 import { Sidebar } from "@/components/Sidebar";
@@ -14,23 +15,78 @@ import { SubstackCard } from "@/components/cards/SubstackCard";
 import { UpcomingCard } from "@/components/cards/UpcomingCard";
 import { WeeklyPromptCard } from "@/components/cards/WeeklyPromptCard";
 import { WeeksDotsCard } from "@/components/cards/WeeksDotsCard";
+import { coupleDisplayName, getDashboardData, getLabContext } from "@/lib/lab/data";
+import { weekStart } from "@/lib/lab/week";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const ctx = await getLabContext();
+  if (ctx.state === "signed_out") redirect("/login");
+  if (ctx.state === "no_couple") redirect("/welcome");
+
+  const data = await getDashboardData(ctx);
+  const thisWeek = weekStart();
+
+  const connectionScore =
+    data.latestScores.length > 0
+      ? Math.round(
+          (data.latestScores.reduce((a, s) => a + s.score, 0) /
+            data.latestScores.length) *
+            10,
+        )
+      : null;
+  const satisfactionSeries = data.scoreHistory.map((p) => p.avg * 10);
+  const soloPartner = data.members.length < 2;
+
   return (
     <div className="min-h-screen bg-bg text-cream">
       <div className="mx-auto flex min-h-screen max-w-[1440px]">
         <Sidebar />
 
         <div className="flex-1 flex flex-col min-w-0">
-          <Header />
+          <Header
+            coupleName={coupleDisplayName(data)}
+            togetherSince={data.couple.together_since}
+            memberSince={data.couple.created_at}
+            soloPartner={soloPartner}
+          />
 
           <main className="flex-1 px-4 sm:px-6 lg:px-8 py-5 lg:py-6 pb-24 lg:pb-8">
+            {soloPartner && (
+              <div className="mb-5 rounded-xl bg-gold-soft/30 border border-gold/30 px-4 py-3 text-[12.5px] text-cream-dim">
+                {data.pendingInvite ? (
+                  <>
+                    Waiting for{" "}
+                    <span className="text-gold">
+                      {data.pendingInvite.invited_email}
+                    </span>{" "}
+                    to join — they&apos;ll see the invite when they sign in
+                    with that email.
+                  </>
+                ) : (
+                  <>
+                    Your partner hasn&apos;t joined yet.{" "}
+                    <a href="/welcome" className="text-gold hover:underline">
+                      Invite them →
+                    </a>
+                  </>
+                )}
+              </div>
+            )}
+
             <div className="grid gap-5 lg:gap-6 grid-cols-1 lg:grid-cols-12">
               {/* Center column */}
               <div className="lg:col-span-8 space-y-5 lg:space-y-6">
                 <div className="grid gap-5 lg:gap-6 grid-cols-1 sm:grid-cols-2 items-start">
-                  <HuddleStreakCard />
-                  <ConnectionScoreCard />
+                  <HuddleStreakCard
+                    streak={data.couple.current_streak}
+                    huddleDoneThisWeek={
+                      data.currentHuddle?.status === "completed" &&
+                      data.currentHuddle.week_start === thisWeek
+                    }
+                  />
+                  <ConnectionScoreCard score={connectionScore} />
                 </div>
 
                 {/* Prominent widescreen live teaching */}
@@ -38,18 +94,24 @@ export default function Home() {
 
                 {/* Four measurement squares */}
                 <div className="grid gap-4 lg:gap-5 grid-cols-2 lg:grid-cols-4">
-                  <WeeksDotsCard />
-                  <SatisfactionCard />
+                  <WeeksDotsCard sharedWeeks={data.sharedWeeks} />
+                  <SatisfactionCard series={satisfactionSeries} />
                   <NinetyDayLoopCard />
-                  <PulseCard />
+                  <PulseCard
+                    current={data.currentHuddle}
+                    previous={data.previousHuddle}
+                  />
                 </div>
               </div>
 
               {/* Right column */}
               <div className="lg:col-span-4 space-y-5 lg:space-y-6">
-                <UpcomingCard />
+                <UpcomingCard plan={data.currentHuddle?.plan ?? null} />
                 <WeeklyPromptCard />
-                <JournalCard />
+                <JournalCard
+                  coupleId={data.couple.id}
+                  initialEntries={data.journalEntries}
+                />
                 <SomaticToolsCard />
                 <SubstackCard />
                 <NewsCard />

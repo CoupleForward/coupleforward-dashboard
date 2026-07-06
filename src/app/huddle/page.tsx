@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   CalendarIcon,
   CheckIcon,
@@ -27,15 +28,17 @@ import {
   buildIcs,
   downloadIcs,
   formatTimeDisplay,
-  loadPlan,
-  savePlan,
   sortSlots,
 } from "@/lib/huddle";
-
-// ─── Partner config ──────────────────────────────────────────────────────
-// TODO: source these from account state once auth is wired up.
-const PARTNER_A = "Jonathan";
-const PARTNER_B = "Elena";
+import {
+  useHuddle,
+  type AskAnswers,
+  type CommitState,
+  type DualAnswer,
+  type ReflectAnswers,
+  type Slot,
+  type UseHuddleResult,
+} from "@/lib/lab/useHuddle";
 
 // ─── Types ───────────────────────────────────────────────────────────────
 
@@ -50,35 +53,7 @@ const STAGES: readonly StageKey[] = [
   "done",
 ] as const;
 
-type DualAnswer = { a: string; b: string };
-
-type ReflectAnswers = {
-  hugCount: number;
-  closenessA: number;
-  closenessB: number;
-  worked: DualAnswer;
-  didntWork: DualAnswer;
-  loved: DualAnswer;
-};
-
-type AskAnswers = {
-  plate: DualAnswer;
-  smallThing: DualAnswer;
-  intentions: DualAnswer;
-};
-
-type CommitState = {
-  addToCalendar: boolean;
-  setReminders: boolean;
-  emailSummary: boolean;
-};
-
-type HuddleState = {
-  reflect: ReflectAnswers;
-  ask: AskAnswers;
-  plan: PlanState;
-  commit: CommitState;
-};
+type Names = { a: string; b: string };
 
 type Ritual = {
   key: PlanKey;
@@ -256,76 +231,49 @@ const rituals: Ritual[] = [
     ],
     proTip:
       "When it's planned and named, no one resents it. When it's stolen or apologized for, it breeds guilt. Put it on the calendar out loud.",
-    detailsPlaceholder: `What each of you needs (e.g., ${PARTNER_A}: Saturday long run · ${PARTNER_B}: Thursday yoga class)`,
+    detailsPlaceholder:
+      "What each of you needs (e.g., Saturday long run · Thursday yoga class)",
   },
 ];
-
-// ─── Initial state ───────────────────────────────────────────────────────
-
-const emptyDual: DualAnswer = { a: "", b: "" };
-
-const initialPlan: PlanState = {
-  morning: { committed: false, details: "" },
-  evening: { committed: false, details: "" },
-  convos: { committed: false, details: "", slots: [] },
-  dinners: { committed: false, details: "", slots: [], menuIdeas: "" },
-  adventure: { committed: false, details: "", slots: [] },
-  familyFriends: { committed: false, details: "" },
-  personal: { committed: false, details: "" },
-};
-
-const initialState: HuddleState = {
-  reflect: {
-    hugCount: 0,
-    closenessA: 0,
-    closenessB: 0,
-    worked: { ...emptyDual },
-    didntWork: { ...emptyDual },
-    loved: { ...emptyDual },
-  },
-  ask: {
-    plate: { ...emptyDual },
-    smallThing: { ...emptyDual },
-    intentions: { ...emptyDual },
-  },
-  plan: initialPlan,
-  commit: {
-    addToCalendar: true,
-    setReminders: true,
-    emailSummary: false,
-  },
-};
 
 // ─── Page ────────────────────────────────────────────────────────────────
 
 export default function HuddlePage() {
+  const router = useRouter();
+  const huddle = useHuddle();
   const [stageIdx, setStageIdx] = useState(0);
-  const [state, setState] = useState<HuddleState>(initialState);
-  const [hydrated, setHydrated] = useState(false);
+  const jumpedToDone = useRef(false);
   const stage = STAGES[stageIdx];
 
-  // Load saved plan on mount
   useEffect(() => {
-    const saved = loadPlan();
-    if (saved) {
-      setState((prev) => ({
-        ...prev,
-        plan: { ...initialPlan, ...saved },
-      }));
-    }
-    setHydrated(true);
-  }, []);
+    if (huddle.status === "signed_out") router.replace("/login");
+    if (huddle.status === "no_couple") router.replace("/welcome");
+  }, [huddle.status, router]);
 
-  // Save plan whenever it changes (after hydration)
+  // A huddle already completed this week opens on the done stage.
   useEffect(() => {
-    if (!hydrated) return;
-    savePlan(state.plan);
-  }, [state.plan, hydrated]);
+    if (huddle.completed && !jumpedToDone.current) {
+      jumpedToDone.current = true;
+      setStageIdx(STAGES.length - 1);
+    }
+  }, [huddle.completed]);
 
   const next = () => setStageIdx((i) => Math.min(i + 1, STAGES.length - 1));
   const back = () => setStageIdx((i) => Math.max(i - 1, 0));
 
-  const showFooter = stage !== "welcome" && stage !== "done";
+  const showFooter =
+    stage !== "welcome" && stage !== "done" && huddle.status === "ready";
+
+  if (huddle.status !== "ready") {
+    return (
+      <div className="min-h-screen bg-bg text-cream flex items-center justify-center">
+        <div className="flex items-center gap-2.5 text-cream-mute text-[13px]">
+          <HeartIcon className="size-4 text-gold" />
+          Preparing your huddle…
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-bg text-cream flex flex-col">
@@ -333,34 +281,37 @@ export default function HuddlePage() {
 
       <main className="flex-1 w-full">
         <div className="mx-auto max-w-3xl px-5 sm:px-6 lg:px-8 py-10 lg:py-14">
-          {stage === "welcome" && <WelcomeStage onStart={next} />}
+          {stage === "welcome" && (
+            <WelcomeStage onStart={next} names={huddle.names} />
+          )}
           {stage === "reflect" && (
             <ReflectStage
-              value={state.reflect}
-              onChange={(reflect) => setState((s) => ({ ...s, reflect }))}
+              value={huddle.state.reflect}
+              huddle={huddle}
             />
           )}
           {stage === "ask" && (
-            <AskStage
-              value={state.ask}
-              onChange={(ask) => setState((s) => ({ ...s, ask }))}
-            />
+            <AskStage value={huddle.state.ask} huddle={huddle} />
           )}
           {stage === "plan" && (
-            <PlanStage
-              value={state.plan}
-              onChange={(plan) => setState((s) => ({ ...s, plan }))}
-            />
+            <PlanStage value={huddle.state.plan} onChange={huddle.setPlan} />
           )}
           {stage === "commit" && (
             <CommitStage
-              value={state.commit}
-              plan={state.plan}
-              onChange={(commit) => setState((s) => ({ ...s, commit }))}
-              onComplete={next}
+              value={huddle.state.commit}
+              plan={huddle.state.plan}
+              onChange={huddle.setCommit}
+              onComplete={async () => {
+                const err = await huddle.complete();
+                if (!err) {
+                  jumpedToDone.current = true;
+                  setStageIdx(STAGES.length - 1);
+                }
+                return err;
+              }}
             />
           )}
-          {stage === "done" && <DoneStage />}
+          {stage === "done" && <DoneStage streak={huddle.streak?.current ?? 1} />}
         </div>
       </main>
 
@@ -636,11 +587,15 @@ function DualQuestionCard({
   subtitle,
   value,
   onChange,
+  names,
+  soloPartner,
 }: {
   title: string;
   subtitle?: string;
   value: DualAnswer;
   onChange: (v: DualAnswer) => void;
+  names: Names;
+  soloPartner: boolean;
 }) {
   return (
     <div className="rounded-2xl bg-card border border-line-soft px-5 sm:px-6 py-5">
@@ -654,16 +609,17 @@ function DualQuestionCard({
       )}
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <PartnerField
-          name={PARTNER_A}
+          name={names.a}
           contextTitle={title}
           value={value.a}
           onChange={(v) => onChange({ ...value, a: v })}
         />
         <PartnerField
-          name={PARTNER_B}
+          name={names.b}
           contextTitle={title}
           value={value.b}
           onChange={(v) => onChange({ ...value, b: v })}
+          disabled={soloPartner}
         />
       </div>
     </div>
@@ -675,33 +631,46 @@ function PartnerField({
   contextTitle,
   value,
   onChange,
+  disabled = false,
 }: {
   name: string;
   contextTitle: string;
   value: string;
   onChange: (v: string) => void;
+  disabled?: boolean;
 }) {
   return (
-    <div className="rounded-xl bg-card-2/60 border border-line-soft/60 p-3">
+    <div
+      className={`rounded-xl bg-card-2/60 border border-line-soft/60 p-3 ${
+        disabled ? "opacity-60" : ""
+      }`}
+    >
       <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
         <span className="text-[10px] font-semibold tracking-[0.14em] uppercase text-gold">
           {name}
         </span>
-        <div className="flex items-center gap-1.5">
-          <MicButton value={value} onChange={onChange} />
-          <SavePromptButton
-            value={value}
-            contextTitle={contextTitle}
-            name={name}
-          />
-        </div>
+        {!disabled && (
+          <div className="flex items-center gap-1.5">
+            <MicButton value={value} onChange={onChange} />
+            <SavePromptButton
+              value={value}
+              contextTitle={contextTitle}
+              name={name}
+            />
+          </div>
+        )}
       </div>
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={`${name}'s answer…`}
+        placeholder={
+          disabled
+            ? "Unlocks when your partner joins"
+            : `${name}'s answer…`
+        }
         rows={3}
-        className="w-full resize-none bg-transparent text-[13.5px] text-cream placeholder:text-cream-mute/60 focus:outline-none"
+        disabled={disabled}
+        className="w-full resize-none bg-transparent text-[13.5px] text-cream placeholder:text-cream-mute/60 focus:outline-none disabled:cursor-not-allowed"
       />
     </div>
   );
@@ -786,13 +755,15 @@ function HugTracker({
 function ClosenessRating({
   valueA,
   valueB,
-  onChangeA,
-  onChangeB,
+  onChange,
+  names,
+  soloPartner,
 }: {
   valueA: number;
   valueB: number;
-  onChangeA: (v: number) => void;
-  onChangeB: (v: number) => void;
+  onChange: (slot: Slot, v: number) => void;
+  names: Names;
+  soloPartner: boolean;
 }) {
   return (
     <div className="rounded-2xl bg-card border border-line-soft px-5 sm:px-6 py-5">
@@ -804,8 +775,17 @@ function ClosenessRating({
         ones are the whole point.
       </p>
       <div className="mt-5 space-y-4">
-        <RatingRow name={PARTNER_A} value={valueA} onChange={onChangeA} />
-        <RatingRow name={PARTNER_B} value={valueB} onChange={onChangeB} />
+        <RatingRow
+          name={names.a}
+          value={valueA}
+          onChange={(v) => onChange("a", v)}
+        />
+        <RatingRow
+          name={names.b}
+          value={valueB}
+          onChange={(v) => onChange("b", v)}
+          disabled={soloPartner}
+        />
       </div>
     </div>
   );
@@ -815,19 +795,21 @@ function RatingRow({
   name,
   value,
   onChange,
+  disabled = false,
 }: {
   name: string;
   value: number;
   onChange: (v: number) => void;
+  disabled?: boolean;
 }) {
   return (
-    <div>
+    <div className={disabled ? "opacity-60" : ""}>
       <div className="flex items-center justify-between mb-2">
         <span className="text-[10px] font-semibold tracking-[0.14em] uppercase text-gold">
           {name}
         </span>
         <span className="text-[12px] text-cream-dim tabular-nums">
-          {value > 0 ? `${value} / 10` : "—"}
+          {disabled ? "Waiting to join" : value > 0 ? `${value} / 10` : "—"}
         </span>
       </div>
       <div className="flex items-center gap-1">
@@ -839,11 +821,12 @@ function RatingRow({
               key={num}
               type="button"
               onClick={() => onChange(num)}
+              disabled={disabled}
               className={`flex-1 h-8 rounded-md border text-[11px] font-medium transition ${
                 active
                   ? "bg-gold border-gold text-[#1a1a1a]"
                   : "bg-card-2/40 border-line-soft/60 text-cream-mute hover:border-gold/60 hover:text-cream"
-              }`}
+              } disabled:cursor-not-allowed disabled:hover:border-line-soft/60 disabled:hover:text-cream-mute`}
               aria-label={`${name} rating ${num}`}
             >
               {num}
@@ -1003,14 +986,21 @@ function AddToCalendarButton({
 
 // ─── Stages ──────────────────────────────────────────────────────────────
 
-function WelcomeStage({ onStart }: { onStart: () => void }) {
+function WelcomeStage({
+  onStart,
+  names,
+}: {
+  onStart: () => void;
+  names: Names;
+}) {
   return (
     <div className="flex flex-col items-center text-center pt-6 sm:pt-12">
       <div className="size-16 rounded-2xl bg-gold-soft grid place-items-center text-gold mb-8">
         <HuddleIcon className="size-8" />
       </div>
       <h1 className="text-[36px] sm:text-[44px] font-semibold text-cream leading-tight">
-        Let&apos;s Huddle.
+        Let&apos;s Huddle, {names.a}
+        {names.b !== "Your partner" ? ` & ${names.b}` : ""}.
       </h1>
       <p className="mt-5 text-cream-dim text-[14.5px] max-w-[600px] leading-relaxed">
         Welcome to the Couple Forward Huddle — where you design quality
@@ -1057,7 +1047,7 @@ function WelcomeStage({ onStart }: { onStart: () => void }) {
         <ChevronRightIcon className="size-4" />
       </button>
       <p className="mt-4 text-[11px] text-cream-mute">
-        Takes about 15–30 minutes
+        Takes about 15–30 minutes · Saved to your couple as you go
       </p>
     </div>
   );
@@ -1065,10 +1055,10 @@ function WelcomeStage({ onStart }: { onStart: () => void }) {
 
 function ReflectStage({
   value,
-  onChange,
+  huddle,
 }: {
   value: ReflectAnswers;
-  onChange: (v: ReflectAnswers) => void;
+  huddle: UseHuddleResult;
 }) {
   return (
     <div>
@@ -1078,33 +1068,37 @@ function ReflectStage({
         subtitle="This is a chance to improve and add quality — not to complain. Stay positive, name the wins, then name the gaps with warmth."
       />
       <div className="mt-8 space-y-5">
-        <HugTracker
-          value={value.hugCount}
-          onChange={(hugCount) => onChange({ ...value, hugCount })}
-        />
+        <HugTracker value={value.hugCount} onChange={huddle.setHugCount} />
         <ClosenessRating
           valueA={value.closenessA}
           valueB={value.closenessB}
-          onChangeA={(closenessA) => onChange({ ...value, closenessA })}
-          onChangeB={(closenessB) => onChange({ ...value, closenessB })}
+          onChange={huddle.setCloseness}
+          names={huddle.names}
+          soloPartner={huddle.soloPartner}
         />
         <DualQuestionCard
           title="What worked well for us last week?"
           subtitle="Start here. Name the moments that landed — the small ones too."
           value={value.worked}
-          onChange={(worked) => onChange({ ...value, worked })}
+          onChange={(v) => huddle.setDual("worked", v)}
+          names={huddle.names}
+          soloPartner={huddle.soloPartner}
         />
         <DualQuestionCard
           title="What didn&rsquo;t work the way we thought it would?"
           subtitle="An observation, not a complaint list. Where did the plan meet reality?"
           value={value.didntWork}
-          onChange={(didntWork) => onChange({ ...value, didntWork })}
+          onChange={(v) => huddle.setDual("didntWork", v)}
+          names={huddle.names}
+          soloPartner={huddle.soloPartner}
         />
         <DualQuestionCard
           title="What made you feel loved this week?"
           subtitle="Take turns. Be specific. Specific is where love lives."
           value={value.loved}
-          onChange={(loved) => onChange({ ...value, loved })}
+          onChange={(v) => huddle.setDual("loved", v)}
+          names={huddle.names}
+          soloPartner={huddle.soloPartner}
         />
       </div>
     </div>
@@ -1113,10 +1107,10 @@ function ReflectStage({
 
 function AskStage({
   value,
-  onChange,
+  huddle,
 }: {
   value: AskAnswers;
-  onChange: (v: AskAnswers) => void;
+  huddle: UseHuddleResult;
 }) {
   return (
     <div>
@@ -1130,19 +1124,25 @@ function AskStage({
           title="What&rsquo;s on your plate this week that you want me to know about, support, or be engaged with?"
           subtitle="Calendars, stressors, big asks, small ones. Save anything you need into your own reminders, calendar, or notes."
           value={value.plate}
-          onChange={(plate) => onChange({ ...value, plate })}
+          onChange={(v) => huddle.setDual("plate", v)}
+          names={huddle.names}
+          soloPartner={huddle.soloPartner}
         />
         <DualQuestionCard
           title="What&rsquo;s one small thing I can do this week to make you feel more loved?"
           subtitle="Small and specific beats grand. One thing."
           value={value.smallThing}
-          onChange={(smallThing) => onChange({ ...value, smallThing })}
+          onChange={(v) => huddle.setDual("smallThing", v)}
+          names={huddle.names}
+          soloPartner={huddle.soloPartner}
         />
         <DualQuestionCard
           title="What personal intentions do you have this week that I can support?"
           subtitle="Autonomy isn&rsquo;t separate from us — it gets planned for."
           value={value.intentions}
-          onChange={(intentions) => onChange({ ...value, intentions })}
+          onChange={(v) => huddle.setDual("intentions", v)}
+          names={huddle.names}
+          soloPartner={huddle.soloPartner}
         />
       </div>
     </div>
@@ -1388,8 +1388,10 @@ function CommitStage({
   value: CommitState;
   plan: PlanState;
   onChange: (v: CommitState) => void;
-  onComplete: () => void;
+  onComplete: () => Promise<string | null>;
 }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const committedRituals = rituals.filter((r) => plan[r.key].committed);
 
   return (
@@ -1476,8 +1478,8 @@ function CommitStage({
           </div>
           <p className="mt-4 text-[11px] text-cream-mute leading-snug">
             Scheduled rituals already download as .ics files straight from each
-            card — open them on your phone to add to Apple or Google Calendar. A
-            shared couple calendar and cross-device sync are coming next.
+            card — open them on your phone to add to Apple or Google Calendar.
+            Reminders and email summaries are coming next.
           </p>
         </div>
       </div>
@@ -1485,15 +1487,28 @@ function CommitStage({
       <div className="mt-10 flex flex-col items-center">
         <button
           type="button"
-          onClick={onComplete}
-          className="inline-flex items-center gap-2 rounded-full bg-gold text-[#1a1a1a] px-8 py-3.5 text-[15px] font-semibold hover:bg-gold-bright transition"
+          disabled={busy}
+          onClick={async () => {
+            setBusy(true);
+            setError(null);
+            const err = await onComplete();
+            if (err) {
+              setError(err);
+              setBusy(false);
+            }
+          }}
+          className="inline-flex items-center gap-2 rounded-full bg-gold text-[#1a1a1a] px-8 py-3.5 text-[15px] font-semibold hover:bg-gold-bright transition disabled:opacity-50"
         >
-          Complete Huddle
+          {busy ? "Saving your huddle…" : "Complete Huddle"}
           <CheckIcon className="size-4" />
         </button>
-        <p className="mt-3 text-[11px] text-cream-mute">
-          Your streak will advance by one week
-        </p>
+        {error ? (
+          <p className="mt-3 text-[11.5px] text-[#e08a8a]">{error}</p>
+        ) : (
+          <p className="mt-3 text-[11px] text-cream-mute">
+            Your streak will advance by one week
+          </p>
+        )}
       </div>
     </div>
   );
@@ -1537,7 +1552,7 @@ function ToggleRow({
   );
 }
 
-function DoneStage() {
+function DoneStage({ streak }: { streak: number }) {
   return (
     <div className="flex flex-col items-center text-center pt-8 sm:pt-16">
       <div className="size-20 rounded-full bg-gold-soft grid place-items-center text-gold mb-8">
@@ -1549,7 +1564,7 @@ function DoneStage() {
       <p className="mt-4 text-cream-dim text-[15px] max-w-[480px] leading-relaxed">
         You&apos;ve logged{" "}
         <span className="text-gold font-medium">
-          15 weeks of intentional living
+          {streak} {streak === 1 ? "week" : "weeks"} of intentional living
         </span>
         . See you next week — same time, same ritual.
       </p>

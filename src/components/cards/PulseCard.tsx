@@ -1,14 +1,62 @@
 import { Card } from "../Card";
+import type { Huddle } from "@/lib/lab/types";
+import type { PlanKey } from "@/lib/huddle";
 
-// Placeholder metrics — swap for live huddle / ritual data later.
-const metrics = [
-  { label: "6-sec Hugs", value: "14", delta: "+2" },
-  { label: "Deep Talks", value: "3", delta: "+1" },
-  { label: "Dinners", value: "5", delta: "—" },
-  { label: "Adventures", value: "1", delta: "=" },
-];
+function slotCount(h: Huddle | null, key: PlanKey): number {
+  const item = h?.plan?.[key];
+  if (!item?.committed) return 0;
+  return item.slots?.length ?? 1;
+}
 
-export function PulseCard() {
+function fmtDelta(cur: number, prev: number | null): string {
+  if (prev === null) return "—";
+  const d = cur - prev;
+  if (d > 0) return `+${d}`;
+  if (d === 0) return "=";
+  return `${d}`;
+}
+
+// Live counts from this week's huddle, with deltas vs last week's.
+export function PulseCard({
+  current,
+  previous,
+}: {
+  current: Huddle | null;
+  previous: Huddle | null;
+}) {
+  const prevOr = (v: number): number | null => (previous ? v : null);
+  const metrics = [
+    {
+      label: "6-sec Hugs",
+      value: current?.hug_count ?? 0,
+      delta: fmtDelta(current?.hug_count ?? 0, prevOr(previous?.hug_count ?? 0)),
+    },
+    {
+      label: "Deep Talks",
+      value: slotCount(current, "convos"),
+      delta: fmtDelta(
+        slotCount(current, "convos"),
+        prevOr(slotCount(previous, "convos")),
+      ),
+    },
+    {
+      label: "Dinners",
+      value: slotCount(current, "dinners"),
+      delta: fmtDelta(
+        slotCount(current, "dinners"),
+        prevOr(slotCount(previous, "dinners")),
+      ),
+    },
+    {
+      label: "Adventures",
+      value: slotCount(current, "adventure"),
+      delta: fmtDelta(
+        slotCount(current, "adventure"),
+        prevOr(slotCount(previous, "adventure")),
+      ),
+    },
+  ];
+
   return (
     <Card className="flex flex-col min-h-[230px]">
       <div className="text-[10px] tracking-[0.18em] uppercase text-cream-mute">
@@ -30,9 +78,7 @@ export function PulseCard() {
               </div>
               <div
                 className={`text-[9.5px] tabular-nums ${
-                  m.delta.startsWith("+")
-                    ? "text-gold"
-                    : "text-cream-mute"
+                  m.delta.startsWith("+") ? "text-gold" : "text-cream-mute"
                 }`}
               >
                 {m.delta}

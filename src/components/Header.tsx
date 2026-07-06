@@ -1,4 +1,5 @@
 import { BellIcon, HeartIcon, SettingsIcon, UserIcon } from "./icons";
+import { SignOutButton } from "./SignOutButton";
 
 function Avatar() {
   return (
@@ -8,7 +9,31 @@ function Avatar() {
   );
 }
 
-export function Header() {
+function formatMonthYear(iso: string): string {
+  return new Date(`${iso.slice(0, 10)}T12:00:00`).toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+  });
+}
+
+export function Header({
+  coupleName,
+  togetherSince,
+  memberSince,
+  soloPartner,
+}: {
+  coupleName: string;
+  togetherSince: string | null;
+  memberSince: string;
+  soloPartner: boolean;
+}) {
+  const subtitle = [
+    togetherSince ? `Together since ${formatMonthYear(togetherSince)}` : null,
+    `Members since ${formatMonthYear(memberSince)}`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
     <header className="flex items-center justify-between gap-6 px-4 py-4 sm:px-6 lg:px-8 border-b border-line-soft">
       {/* Logo (mobile only — sidebar already shows it on desktop) */}
@@ -30,10 +55,11 @@ export function Header() {
         </div>
         <div className="leading-tight">
           <div className="text-xl sm:text-2xl font-medium text-cream">
-            Jonathan &amp; Elena
+            {coupleName}
           </div>
           <div className="text-[11px] text-cream-mute mt-0.5">
-            Together since March 2014 · Members since January 2026
+            {soloPartner ? "Waiting for your partner to join · " : ""}
+            {subtitle}
           </div>
         </div>
       </div>
@@ -53,15 +79,8 @@ export function Header() {
           aria-label="Notifications"
         >
           <BellIcon className="size-[18px]" />
-          <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-gold" />
         </button>
-        <button
-          type="button"
-          className="ml-1 hidden sm:inline-flex items-center gap-2 rounded-full border border-gold/60 px-3.5 py-1.5 text-[12px] font-medium text-gold hover:bg-gold-soft transition"
-        >
-          <span className="size-1.5 rounded-full bg-gold animate-pulse" />
-          Go Live
-        </button>
+        <SignOutButton />
       </div>
     </header>
   );

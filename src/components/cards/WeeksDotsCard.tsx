@@ -1,12 +1,14 @@
 import { Card } from "../Card";
 
 const TOTAL_WEEKS = 4000;
-const SHARED_WEEKS = 627;
+const FALLBACK_SHARED = 627;
 // Projected weeks remaining together (life-expectancy based, not 4000 - shared).
 const REMAINING = 1480;
 
-export function WeeksDotsCard() {
-  const pct = SHARED_WEEKS / TOTAL_WEEKS;
+// sharedWeeks is computed by the server component from couples.together_since.
+export function WeeksDotsCard({ sharedWeeks }: { sharedWeeks: number | null }) {
+  const shared = sharedWeeks ?? FALLBACK_SHARED;
+  const pct = Math.min(1, shared / TOTAL_WEEKS);
 
   return (
     <Card className="flex flex-col min-h-[230px]">
@@ -46,7 +48,7 @@ export function WeeksDotsCard() {
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <div className="text-[26px] font-semibold text-cream leading-none tabular-nums">
-              {SHARED_WEEKS}
+              {shared}
             </div>
             <div className="text-[9px] tracking-[0.14em] uppercase text-cream-mute mt-1">
               shared

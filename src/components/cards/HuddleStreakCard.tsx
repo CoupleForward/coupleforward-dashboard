@@ -2,10 +2,15 @@ import Link from "next/link";
 import { Card } from "../Card";
 import { ChevronRightIcon, FlameIcon } from "../icons";
 
-const STREAK = 14;
 const TOTAL_DOTS = 16;
 
-export function HuddleStreakCard() {
+export function HuddleStreakCard({
+  streak,
+  huddleDoneThisWeek,
+}: {
+  streak: number;
+  huddleDoneThisWeek: boolean;
+}) {
   return (
     <Card className="flex flex-col gap-3">
       <div className="flex items-start gap-3">
@@ -15,9 +20,9 @@ export function HuddleStreakCard() {
         <div className="flex flex-col min-w-0">
           <div className="text-[11.5px] text-cream-dim">Huddle Streak</div>
           <div className="text-[28px] leading-none font-semibold text-cream mt-1">
-            {STREAK}{" "}
+            {streak}{" "}
             <span className="text-cream-dim text-[15px] font-normal">
-              weeks
+              {streak === 1 ? "week" : "weeks"}
             </span>
           </div>
           <div className="text-[9px] tracking-[0.18em] uppercase text-cream-mute mt-1.5">
@@ -28,7 +33,7 @@ export function HuddleStreakCard() {
 
       <div className="flex items-center gap-1 flex-wrap">
         {Array.from({ length: TOTAL_DOTS }).map((_, i) => {
-          const inStreak = i < STREAK;
+          const inStreak = i < Math.min(streak, TOTAL_DOTS);
           return (
             <span
               key={i}
@@ -44,7 +49,11 @@ export function HuddleStreakCard() {
         href="/huddle"
         className="mt-auto inline-flex items-center justify-center gap-1.5 rounded-full bg-gold text-[#1a1a1a] px-3.5 py-2 text-[12px] font-semibold hover:bg-gold-bright transition"
       >
-        Start this week&apos;s Huddle
+        {huddleDoneThisWeek
+          ? "Review this week's Huddle"
+          : streak === 0
+            ? "Start your first Huddle"
+            : "Start this week's Huddle"}
         <ChevronRightIcon className="size-3" />
       </Link>
     </Card>

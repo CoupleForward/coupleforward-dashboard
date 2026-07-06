@@ -9,22 +9,20 @@ import {
   type UpcomingEvent,
   formatTimeDisplay,
   getUpcomingEvents,
-  loadPlan,
 } from "@/lib/huddle";
 
 const MAX_EVENTS = 4;
 
-export function UpcomingCard() {
+// plan now comes from this week's huddle row in Supabase (passed by the
+// server component) instead of localStorage.
+export function UpcomingCard({ plan }: { plan: Partial<PlanState> | null }) {
   const [events, setEvents] = useState<UpcomingEvent[]>([]);
-  const [loaded, setLoaded] = useState(false);
 
+  // Dates are computed client-side so "next occurrence" uses the viewer's
+  // clock and timezone.
   useEffect(() => {
-    const plan: PlanState | null = loadPlan();
-    if (plan) {
-      setEvents(getUpcomingEvents(plan));
-    }
-    setLoaded(true);
-  }, []);
+    if (plan) setEvents(getUpcomingEvents(plan as PlanState));
+  }, [plan]);
 
   const shown = events.slice(0, MAX_EVENTS);
 
@@ -45,7 +43,7 @@ export function UpcomingCard() {
         </div>
       </div>
 
-      {loaded && shown.length > 0 ? (
+      {shown.length > 0 ? (
         <ul className="flex flex-col gap-2 mt-1">
           {shown.map((ev) => {
             const weekday = ev.date.toLocaleDateString("en-US", {
@@ -86,9 +84,7 @@ export function UpcomingCard() {
         </ul>
       ) : (
         <p className="text-[12px] text-cream-mute leading-snug mt-1">
-          {loaded
-            ? "No scheduled rituals yet. Start a Huddle to plan your week."
-            : "Loading…"}
+          No scheduled rituals yet. Start a Huddle to plan your week.
         </p>
       )}
 
