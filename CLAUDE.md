@@ -4,7 +4,7 @@ Members dashboard for Couple Forward. Next.js 16 (App Router, `src/`, Turbopack)
 
 ## Backend
 → Supabase project `btlbgdrhujfoayxzbdjp` — the SHARED ecosystem backend. It also hosts the Maps app (`profiles`, `map_*`, `pending_purchases`). `profiles` is the shared account layer, one row per auth user, auto-created by the `handle_new_user` trigger.
-→ Lab-owned tables: `couples`, `couple_members`, `couple_invites`, `huddles`, `huddle_answers`, `journal_entries`, `connection_scores`. SQL lives in `supabase/migrations/`, applied via the Supabase MCP `apply_migration` (tracked). NEVER alter or drop the Maps tables from this repo.
+→ Lab-owned tables: `couples`, `couple_members`, `couple_invites`, `huddles`, `huddle_answers`, `journal_entries`, `connection_scores`. Canonical SQL lives in `supabase/migrations/`. POLICY: migrations are applied to the live project only in supervised sessions (Christian present), via the Supabase MCP `apply_migration` so they're tracked — never from unattended runs. NEVER alter or drop the Maps tables from this repo.
 → Hard rule: every new table gets RLS in the same migration that creates it, scoped by couple membership (`lab_is_couple_member`). Huddle answers and journal entries are intimate content.
 → Joining a couple goes ONLY through the `create_couple` / `accept_couple_invite` RPCs (a direct insert policy on `couple_members` would let anyone join any couple).
 
