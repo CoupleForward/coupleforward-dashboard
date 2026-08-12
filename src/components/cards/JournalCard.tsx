@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { Card, CardLabel } from "../Card";
 import { PlusIcon } from "../icons";
@@ -54,7 +55,7 @@ export function JournalCard({
   };
 
   return (
-    <Card>
+    <Card id="journal" className="scroll-mt-24">
       <CardLabel>Our Journal</CardLabel>
 
       {entries.length === 0 && !writing && (
@@ -113,14 +114,24 @@ export function JournalCard({
           </div>
         </div>
       ) : (
-        <button
-          type="button"
-          onClick={() => setWriting(true)}
-          className="mt-4 inline-flex items-center gap-1.5 text-[11.5px] font-medium text-gold hover:text-gold-bright transition"
-        >
-          <PlusIcon className="size-3.5" />
-          New Entry
-        </button>
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={() => setWriting(true)}
+            className="inline-flex items-center gap-1.5 text-[11.5px] font-medium text-gold hover:text-gold-bright transition"
+          >
+            <PlusIcon className="size-3.5" />
+            New Entry
+          </button>
+          {entries.length > 0 && (
+            <Link
+              href="/journal"
+              className="text-[11.5px] text-cream-dim hover:text-cream transition"
+            >
+              See all
+            </Link>
+          )}
+        </div>
       )}
     </Card>
   );

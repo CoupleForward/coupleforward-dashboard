@@ -1,121 +1,122 @@
 import Link from "next/link";
+import { SHELF_APPS } from "@/lib/lab/apps";
 import {
-  CompassIcon,
-  EyeIcon,
+  ExternalIcon,
   HeartIcon,
-  HuddleIcon,
+  HistoryIcon,
   JournalIcon,
   LotusIcon,
-  LockIcon,
-  MapIcon,
-  NarmIcon,
-  PauseIcon,
-  PencilIcon,
-  RoadIcon,
 } from "./icons";
-import type { ComponentType, SVGProps } from "react";
 
-type NavItem = {
-  label: string;
-  icon: ComponentType<SVGProps<SVGSVGElement>>;
-  href?: string;
-  active?: boolean;
-  comingSoon?: boolean;
-};
-
-const items: NavItem[] = [
-  { label: "Witness", icon: EyeIcon },
-  { label: "Huddle", icon: HuddleIcon, active: true, href: "/huddle" },
-  { label: "Mapping My Story", icon: MapIcon },
-  { label: "Adventures", icon: CompassIcon, comingSoon: true },
-  { label: "In Between", icon: PauseIcon, comingSoon: true },
-  { label: "Rescript", icon: PencilIcon, comingSoon: true },
-  { label: "Compass", icon: CompassIcon, comingSoon: true },
-  { label: "Roadmap", icon: RoadIcon, comingSoon: true },
-  { label: "NARM", icon: NarmIcon, comingSoon: true },
-  { label: "Feelings", icon: HeartIcon, comingSoon: true },
-];
+// The open app shelf: every member sees every tool. Live tools link for
+// real (the three station apps run on their own subdomains); parked tools
+// carry an honest "Soon" and no dead click.
 
 export function Sidebar() {
   return (
     <aside className="hidden lg:flex w-[232px] shrink-0 flex-col border-r border-line-soft bg-bg-soft">
       {/* Brand */}
       <div className="px-6 pt-6 pb-7">
-        <div className="flex items-center gap-2.5">
+        <Link href="/" className="flex items-center gap-2.5">
           <HeartIcon className="size-5 text-gold" />
           <span className="font-medium tracking-[0.18em] text-[12px] text-cream">
             COUPLE FORWARD
           </span>
-        </div>
+        </Link>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 space-y-0.5">
-        {items.map((item) => {
-          const Icon = item.icon;
+      <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
+        {SHELF_APPS.map((app) => {
+          const Icon = app.icon;
+          const isHuddle = app.key === "huddle";
           const className = `group relative w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13.5px] transition ${
-            item.active
+            isHuddle
               ? "text-cream"
-              : "text-cream-dim hover:text-cream hover:bg-card/60"
+              : app.status === "live"
+                ? "text-cream-dim hover:text-cream hover:bg-card/60"
+                : "text-cream-mute cursor-default"
           }`;
           const content = (
             <>
-              {item.active && (
+              {isHuddle && (
                 <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-gold" />
               )}
               <Icon
                 className={`size-[18px] shrink-0 ${
-                  item.active ? "text-gold" : "text-cream-mute"
+                  isHuddle ? "text-gold" : "text-cream-mute"
                 }`}
               />
-              <span className="flex-1 text-left">{item.label}</span>
-              {item.comingSoon && (
+              <span className="flex-1 text-left">{app.label}</span>
+              {app.status === "soon" && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-gold-soft px-1.5 py-0.5 text-[9px] font-medium text-gold uppercase tracking-wide">
-                  <LockIcon className="size-2.5" />
+                  <span className="size-1 rounded-full bg-gold" />
                   Soon
                 </span>
+              )}
+              {app.status === "live" && app.external && (
+                <ExternalIcon className="size-3 text-cream-mute opacity-0 group-hover:opacity-100 transition" />
               )}
             </>
           );
 
-          if (item.href) {
-            return (
-              <Link key={item.label} href={item.href} className={className}>
+          if (app.status === "live" && app.href) {
+            return app.external ? (
+              <a
+                key={app.key}
+                href={app.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={className}
+              >
+                {content}
+              </a>
+            ) : (
+              <Link key={app.key} href={app.href} className={className}>
                 {content}
               </Link>
             );
           }
           return (
-            <button key={item.label} type="button" className={className}>
+            <div key={app.key} className={className}>
               {content}
-            </button>
+            </div>
           );
         })}
+
+        {/* Huddle history, right under the shelf */}
+        <Link
+          href="/history"
+          className="group relative w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13.5px] text-cream-dim hover:text-cream hover:bg-card/60 transition"
+        >
+          <HistoryIcon className="size-[18px] shrink-0 text-cream-mute" />
+          <span className="flex-1 text-left">Past weeks</span>
+        </Link>
       </nav>
 
       {/* Bottom shelf */}
       <div className="px-4 py-5 border-t border-line-soft">
         <div className="flex items-center justify-around">
-          <button
-            type="button"
+          <Link
+            href="/breathe"
             className="flex flex-col items-center gap-1 text-cream-mute hover:text-cream transition"
           >
             <span className="size-9 rounded-full grid place-items-center bg-card">
               <LotusIcon className="size-[18px]" />
             </span>
             <span className="text-[10px] leading-tight text-center max-w-[70px]">
-              Breathwork / somatic
+              Breathwork
             </span>
-          </button>
-          <button
-            type="button"
+          </Link>
+          <Link
+            href="/journal"
             className="flex flex-col items-center gap-1 text-cream-mute hover:text-cream transition"
           >
             <span className="size-9 rounded-full grid place-items-center bg-card">
               <JournalIcon className="size-[18px]" />
             </span>
             <span className="text-[10px] leading-tight">Journal</span>
-          </button>
+          </Link>
         </div>
       </div>
     </aside>

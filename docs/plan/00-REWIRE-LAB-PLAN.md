@@ -34,6 +34,8 @@ Design consequence that runs through every doc in this set: **the journey layers
 
 ---
 
+> **STATUS UPDATE 2026-08-12:** the overnight build landed most of Phase 1's non-supervised scope: Huddle history, the open app shelf (live links to the three station apps), universal metric drill-downs, the journey invitation surface, the honesty pass, working breathwork, journal history, and the data export. See `MORNING-REPORT.md` at the repo root for the supervised steps it queued (RLS tightening migration FIRST, demo-user confirmation, the week-key timezone decision). The baseline below describes the repo BEFORE that build.
+
 ## A. Current state → the honest baseline (verified against the repo, 2026-08-11)
 
 Two prior snapshots exist and both are partly stale. The July 5 deep-read called this "a clickable prototype with one feature and zero backend." That was true on July 5. The overnight FOUNDATION build of July 5-6 changed it materially. As of today the repo sits exactly where that build left it: seven commits, the last four local-only (main is 4 ahead of origin), untouched since July 6.

@@ -1,6 +1,13 @@
 // Huddle weeks are keyed by their Monday, formatted as a local YYYY-MM-DD
 // date string. Client and server run on the same machine in dev; both use
 // local time so the key never straddles a timezone boundary.
+//
+// DEPLOY BLOCKER (known, 2026-08-11 review): on a UTC host this diverges
+// from the viewer's local Monday for part of every Sunday/Monday, so the
+// server's idea of "this week" (dashboard cards, weekly prompt) can point
+// at a different huddle row than the client created. Decide the fix before
+// deploying: key weeks in one fixed timezone for everyone, or derive the
+// week client-side and pass it to the server. Do not deploy as is.
 
 export function weekStart(from: Date = new Date()): string {
   const d = new Date(from);

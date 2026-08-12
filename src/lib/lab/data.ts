@@ -17,13 +17,21 @@ export type LabContext = {
   pendingInvite: CoupleInvite | null;
 };
 
+export type ScoreWeek = {
+  week_start: string;
+  avg: number;
+  byMember: { name: string; score: number }[];
+};
+
 export type DashboardData = LabContext & {
   currentHuddle: Huddle | null;
   previousHuddle: Huddle | null;
   recentCompletedWeeks: string[]; // week_start of recent completed huddles
+  completedCount: number; // true total of completed huddles (not window-capped)
   sharedWeeks: number | null; // weeks since together_since
   latestScores: ConnectionScore[]; // most recent score per member
   scoreHistory: { week_start: string; avg: number }[]; // per completed huddle
+  scoreDetail: ScoreWeek[]; // same weeks, with per-member breakdown (drill-downs)
   journalEntries: JournalEntry[];
 };
 
@@ -88,7 +96,7 @@ export async function getDashboardData(
   const supabase = await createSupabaseServerClient();
   const thisWeek = weekStart();
 
-  const [huddlesRes, scoresRes, journalRes] = await Promise.all([
+  const [huddlesRes, scoresRes, journalRes, completedCountRes] = await Promise.all([
     supabase
       .from("huddles")
       .select("*")
@@ -107,6 +115,11 @@ export async function getDashboardData(
       .eq("couple_id", ctx.couple.id)
       .order("created_at", { ascending: false })
       .limit(3),
+    supabase
+      .from("huddles")
+      .select("id", { count: "exact", head: true })
+      .eq("couple_id", ctx.couple.id)
+      .eq("status", "completed"),
   ]);
 
   const huddles = (huddlesRes.data ?? []) as Huddle[];
@@ -126,24 +139,40 @@ export async function getDashboardData(
     if (s) latestScores.push(s);
   }
 
-  // Per-huddle averages, oldest first (for the satisfaction sparkline)
-  const byHuddle = new Map<string, { week_start: string; vals: number[] }>();
+  // Per-huddle averages, oldest first (for the satisfaction sparkline),
+  // with a per-member breakdown for the drill-down views.
+  const firstName = (userId: string): string => {
+    const m = ctx.members.find((x) => x.user_id === userId);
+    return (m?.display_name ?? "").split(" ")[0] || "Partner";
+  };
+  const byHuddle = new Map<
+    string,
+    { week_start: string; vals: { userId: string; score: number }[] }
+  >();
   for (const h of huddles.filter((x) => x.status === "completed")) {
     byHuddle.set(h.id, { week_start: h.week_start, vals: [] });
   }
   for (const s of scores) {
     if (s.huddle_id && byHuddle.has(s.huddle_id)) {
-      byHuddle.get(s.huddle_id)!.vals.push(s.score);
+      byHuddle.get(s.huddle_id)!.vals.push({ userId: s.user_id, score: s.score });
     }
   }
-  const scoreHistory = [...byHuddle.values()]
+  const scoreDetail: ScoreWeek[] = [...byHuddle.values()]
     .filter((x) => x.vals.length > 0)
     .map((x) => ({
       week_start: x.week_start,
-      avg: x.vals.reduce((a, b) => a + b, 0) / x.vals.length,
+      avg: x.vals.reduce((a, b) => a + b.score, 0) / x.vals.length,
+      byMember: x.vals.map((v) => ({
+        name: firstName(v.userId),
+        score: v.score,
+      })),
     }))
     .sort((a, b) => a.week_start.localeCompare(b.week_start))
     .slice(-10);
+  const scoreHistory = scoreDetail.map(({ week_start, avg }) => ({
+    week_start,
+    avg,
+  }));
 
   const sharedWeeks = ctx.couple.together_since
     ? Math.max(
@@ -164,6 +193,8 @@ export async function getDashboardData(
     sharedWeeks,
     latestScores,
     scoreHistory,
+    scoreDetail,
+    completedCount: completedCountRes.count ?? 0,
     journalEntries: (journalRes.data ?? []) as JournalEntry[],
   };
 }

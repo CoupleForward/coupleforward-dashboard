@@ -1,74 +1,43 @@
-# Morning Report — Lab FOUNDATION build
+# Morning Report — Rhythm membership build
 
-Overnight autonomous build, night of July 5–6, 2026. The prototype is now a product foundation: real accounts, a couple model, persistent Huddles that sync between partners, a real streak, and journal + connection scoring wired to live data. Local commits only, nothing pushed, nothing deployed.
+Overnight autonomous build, night of August 11-12, 2026. Everything from the REWIRE Lab plan (docs/plan/) that was buildable on the existing schema without supervised steps is now built, adversarially reviewed in three rounds, and committed. No live database changes were made; no migrations were applied.
 
-## ⚠️ Read this first: state of the live database
+(The July 5-6 FOUNDATION report this file replaces is in git history: `git show 887920e:MORNING-REPORT.md`.)
 
-Mid-run, the plan changed to "write migration files only, apply supervised in the morning." **Before that instruction arrived, the four migrations had already been applied to the live project** (`btlbgdrhujfoayxzbdjp`) via the Supabase MCP connector, and verified. So the morning DB step is **review/verify, not apply** — re-applying will error because the objects exist. What's on live right now:
+## ⚠️ Supervised morning steps, in order
 
-| Applied version | Name | Repo file (canonical SQL) |
-|---|---|---|
-| 20260706044147 | lab_couples_core | `supabase/migrations/20260706010000_lab_couples_core.sql` |
-| 20260706044200 | lab_huddles | `supabase/migrations/20260706010100_lab_huddles.sql` |
-| 20260706044216 | lab_journal_and_scores | `supabase/migrations/20260706010200_lab_journal_and_scores.sql` |
-| 20260706044223 | lab_realtime | `supabase/migrations/20260706010300_lab_realtime.sql` |
+**1. Apply the RLS tightening migration FIRST → `supabase/migrations/20260811090000_lab_tighten_rls_updates.sql` (draft, NOT applied).** The overnight security review found a real hole in the July schema: the `couple_members` UPDATE policy has no WITH CHECK, so any member who learns another couple's UUID can re-point their own membership row at that couple and gain full read/write of their huddle answers and journal. Same shape on `journal_entries` UPDATE (cross-couple write injection), and `connection_scores` INSERT doesn't bind `user_id` to the caller. The draft migration fixes all three (WITH CHECK + column-level grants so `display_name` is the only member-updatable column). Verified: no client code writes those paths directly and all RPCs are SECURITY DEFINER, so nothing breaks. Apply via the Supabase MCP `apply_migration` in a session with you present.
 
-Strictly additive: 7 new tables (`couples`, `couple_members`, `couple_invites`, `huddles`, `huddle_answers`, `journal_entries`, `connection_scores`), 5 functions, 19 RLS policies, realtime publication for the three sync tables. `profiles`, `map_*`, `pending_purchases` untouched — re-verified after applying (zero public tables without RLS, existing users and structure unchanged). No further live writes were made after the plan change. If you'd rather these hadn't landed yet, the supervised morning session can drop the 7 `lab_*`/couple tables cleanly — nothing else references them.
+**2. Confirm the two demo users** (still unconfirmed since July): Supabase dashboard → Authentication → Users → `jonathan.demo@coupleforward.test` and `elena.demo@coupleforward.test` → ⋯ → Confirm email.
 
-Also on live: two demo users created through the normal signup API (`jonathan.demo@coupleforward.test`, `elena.demo@coupleforward.test`), **unconfirmed** — the safety layer on this unattended session correctly refused direct `auth.users` writes, so they can't sign in until confirmed. Delete them from the dashboard Users screen if unwanted.
+**3. `npm run verify:flow`** then **`npm run dev`** and walk the new surfaces signed in (list below). Overnight testing covered everything except a signed-in browser session, which is blocked on step 2.
 
-## Verify-with-Christian checklist (5 minutes, supervised)
+**4. Decide the week-key timezone fix before any deploy.** Pre-existing, now documented in `src/lib/lab/week.ts`: on a UTC host, the server's idea of "this week" diverges from the viewer's local Monday for part of every Sunday/Monday. Options: key all weeks in one fixed timezone, or derive the week client-side. Marked as a deploy blocker in the code.
 
-1. Supabase dashboard → Database → Migrations: confirm the four `lab_*` entries above.
-2. Authentication → Users → confirm email on the two `.demo@coupleforward.test` users (⋯ → Confirm email). Or delete them and use real accounts.
-3. From the repo: `npm run verify:flow` — signs in both demo partners and walks create couple → invite → accept → huddle → both partners answer → cross-partner visibility → complete → streak advances → connection scores logged → shared journal. Prints PASS/FAIL per step.
-4. `npm run dev` → http://localhost:3000 → sign in as `jonathan.demo@coupleforward.test` (password: `DEMO_PARTNER_PASSWORD` in `.env.local`). Do a huddle in the browser; open a second private window as `elena.demo@` to watch the sync.
+**5. One small decision:** the account page tells members deletion requests are honored but names no channel. Pick the support address (or channel) and it gets wired in.
 
-## What was built (all committed locally)
+## What was built
 
-**Auth + accounts.** `/login`: email+password, magic link, and sign-up, on Supabase Auth against the shared `profiles` account layer (the existing `handle_new_user` trigger provisions profiles for new signups, same as Maps). Session refresh + route gating via `src/proxy.ts` (Next 16 middleware successor). PKCE callback at `/auth/callback`.
+All of it on the existing schema, all RLS-scoped, matching the two-anchor model in docs/plan/00 (rhythm membership + journey invitation, apps never gated).
 
-**Couple model.** Partner A creates the couple at `/welcome` (name, together-since), invites Partner B by email. B signs up with that email, sees the invite at sign-in, accepts, and both share one live dashboard. One couple per user (DB-enforced). Joining goes only through the `create_couple` / `accept_couple_invite` RPCs — deliberately no direct insert path into `couple_members`.
+→ **Huddle history**: `/history` lists every completed week (hugs, rituals, both closeness ratings); `/history/[week]` shows both partners' full reflect/ask answers and the week's plan. Reflect/ask answers finally have a place to be reread.
+→ **The open app shelf**: sidebar and new `/apps` page link for real to the three live station apps (Mapping My Story, The Between, Adventures, new-tab). Parked tools show an honest "Soon" (no padlock: nothing is locked, it just isn't built). Mobile nav tabs are now real links: Home, Apps, Huddle, Journal, Account.
+→ **Universal drill-downs** (the rule from docs/plan/01 §5a): every metric card opens into a depth view: what the number is, which weeks and answers produced it, full history, what tends to move it, honest framing. Connection Score (with per-partner reads and a divergence note), Satisfaction, Weekly Pulse, Streak (explicitly rhythm, never progress; real total from a count query), 4,000 Weeks (fake "~1,480 weeks left" stat replaced with honest arithmetic), and the 90 Day Loop (now explains the protocol and its five categories).
+→ **The journey invitation**: a calm card on the dashboard plus `/journey`: the three phases (Map It / Rewire It / Lock It In), what is real today (the Inner Compass, linked to the live `/inner-compass` page), no invented timeline, no fake node map, and an explicit "the rhythm is a complete membership on its own."
+→ **Honesty pass**: stale News and Substack cards deleted. Live Teaching is now a truthful placeholder (no fake schedule, recordings, or play buttons). Weekly prompt rotates deterministically per week and links into the journal.
+→ **Breathwork is real**: `/breathe` has a working breath pacer (Box, 4-7-8, Physiological Sigh) with an animated circle. Pure client, nothing leaves the device.
+→ **Journal history**: `/journal` shows every entry (the card kept its latest-three + composer, gained "See all").
+→ **Account + data export**: `/account` (header gear and mobile Account tab) shows couple info, sign-out, and a Download-your-data button: complete, paginated export of every huddle, answer, journal entry, and score, reshaped to names and weeks with NO internal UUIDs (deliberate, see the security note above). Dead notification bell removed.
 
-**"Jonathan & Elena" replaced** with the real signed-in couple in the header (names, together-since, member-since), plus sign-out and a "waiting for your partner" banner while solo.
+## How it was checked (the recursive loop)
 
-**Huddle ported off localStorage, fully.** All six stages persist as you type (debounced per field): hug count, both closeness ratings, all six reflect/ask dual answers, ritual plan, commit prefs. One huddle per couple per week (Monday-keyed). Two-partner sync: realtime subscription streams the other partner's edits (3-second local-edit guard prevents clobbering), refetch on window focus as fallback. `complete_huddle` RPC atomically completes the week, copies closeness ratings into `connection_scores`, and advances the real streak (consecutive weeks increment, gaps reset, same-week repeat is a no-op, longest tracked). Done screen shows the real streak; a completed week reopens on it. Dictation, save-to-phone, and .ics export all survived.
+Round 1: three independent adversarial reviewers (correctness, privacy/RLS, plan-conformance) over the full diff. They surfaced 20+ findings including the RLS hole, a 404 on the journey page's Inner Compass button, a silently capped "total Huddles" count, export truncation at Supabase's 1000-row limit, and a systemic em-dash voice violation. Every confirmed finding was fixed. Round 2: a fresh verifier audited each fix and found three small regressions (export paging on a mutable column, two mobile-nav highlights, one em dash). Fixed. Round 3: ground truth re-run and targeted sweeps came back dry.
 
-**Journal + scoring.** Journal card writes/lists real shared entries. Connection gauge = average of both partners' latest closeness × 10. Satisfaction sparkline = per-huddle averages (last 10). Weekly Pulse = live hug count + committed ritual slots with week-over-week deltas. Upcoming rituals read this week's plan from the DB. 4,000 Weeks ring computes from real together-since. All cards have honest empty states pre-data.
+Every round was also gated on: `npm run typecheck` (clean), eslint (only the 5 pre-existing errors in untouched files), `npm run build` (clean, 8 routes now), `npm run test:rls` (11/11 against live), and signed-out browser checks (all new routes 307 to /login; no console or server errors).
 
-**Payment gate stubbed** always-allowed in `src/lib/lab/membership.ts`, with the real query (`profiles.dashboard_access` — column already exists, fed by the coupleforward-web checkout) commented in place for the Stripe session.
+## Honest list of what this build did NOT do
 
-## Tested against what?
-
-No local Supabase stack was possible: **Docker is not installed on the mini** (no Docker Desktop/Colima/OrbStack), and installing a container runtime unattended is out of bounds. So testing ran against the live project, read-only or rolled-back:
-
-→ **Full member flow in SQL, rolled back**: both partners simulated via JWT claims inside `begin…rollback` — create → invite → accept → huddle → answers both sides → complete → streak 1 / 2 connection scores / journal. Plus: anon sees zero rows everywhere, and a non-member authenticated user who *knows the row IDs* reads nothing and gets an RLS violation on write. No residue.
-→ **Live anon RLS suite** (`npm run test:rls`): 11/11 passing tonight.
-→ **Browser**: route gating verified (signed-out → /login), login form verified against real GoTrue (unconfirmed account rejected, error surfaced in UI), login/dashboard render with zero console/server errors.
-→ **`npm run typecheck` clean.** ESLint: 5 remaining errors are the same react-hooks-purity class the repo already failed at HEAD (4 in untouched original code) — cosmetic.
-→ **Still needs live verification** (blocked only on step 2 above): an actual signed-in browser session, the `verify:flow` API run, and a two-browser realtime sync check. The code paths are built and the DB layer beneath them is proven; the signed-in session itself awaits confirmation of the demo users.
-
-## How Christian runs it
-
-```
-cd ~/Dev/coupleforward-dashboard
-npm install        # already done, but harmless
-npm run dev        # http://localhost:3000
-```
-`.env.local` is already in place (Supabase URL + anon/publishable key only — no server-secret keys anywhere in the repo). Sign in with a demo user (after confirming) or any real account; a new account walks through /welcome → create couple → invite partner.
-
-## Honest list of what's left
-
-→ **Payments/entitlements**: stub in place; wire Stripe + `dashboard_access` with Christian's keys (separate supervised task).
-→ **Email delivery**: invites are in-app only (no invite email sent); magic-link/confirmation emails use Supabase's default sender — production needs your SMTP/domain, and localhost may need adding to the Auth redirect allowlist.
-→ **Deploy**: none. No Vercel config, repo not pushed (4 local commits on `main`).
-→ **Realtime two-browser check**: code in, DB verified, live browser check pending step 2.
-→ **Still mock by design**: Live Teaching/video library, Somatic tools, Weekly Prompt rotation, Substack/News feeds, the other sidebar apps (Witness, Rescript, Compass/Inner Compass, NARM, Feelings), mobile-nav tabs, settings/notifications.
-→ **Huddle history UI**: past weeks persist, no browser for them yet.
-→ **Deletion/export story** for intimate content (huddle answers, journal) before any real-couple launch.
-
-## Session notes
-
-→ DB work earlier in the night ran through scoped `claude -p` subprocesses because claude.ai connectors don't attach to headless sessions; after the plan change, no further live access was attempted from this session.
-→ The unattended-safety classifier blocked all direct `auth.users` writes and confirmation-token reads; front-door signup was used instead, leaving email confirmation as the supervised step.
-→ `caffeinate` kept the mini awake; released at the end of the run.
+→ No migrations applied; the journey engine, quizzes, movement measurement, and Compass-report surfaces remain unbuilt (they block on your node map, movement dictionary, and instrument decisions per docs/plan/02).
+→ Payments still stubbed; email still not wired; no deploy (and the week-key blocker above must be decided first).
+→ Signed-in browser walkthrough pending demo-user confirmation.
+→ The Inner Compass link on /journey goes to the public page; in-Lab pricing/bundling per the plan is untouched.

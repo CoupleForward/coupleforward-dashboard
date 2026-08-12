@@ -5,13 +5,12 @@ import { Sidebar } from "@/components/Sidebar";
 import { ConnectionScoreCard } from "@/components/cards/ConnectionScoreCard";
 import { HuddleStreakCard } from "@/components/cards/HuddleStreakCard";
 import { JournalCard } from "@/components/cards/JournalCard";
+import { JourneyCard } from "@/components/cards/JourneyCard";
 import { LiveTeachingCard } from "@/components/cards/LiveTeachingCard";
-import { NewsCard } from "@/components/cards/NewsCard";
 import { NinetyDayLoopCard } from "@/components/cards/NinetyDayLoopCard";
 import { PulseCard } from "@/components/cards/PulseCard";
 import { SatisfactionCard } from "@/components/cards/SatisfactionCard";
 import { SomaticToolsCard } from "@/components/cards/SomaticToolsCard";
-import { SubstackCard } from "@/components/cards/SubstackCard";
 import { UpcomingCard } from "@/components/cards/UpcomingCard";
 import { WeeklyPromptCard } from "@/components/cards/WeeklyPromptCard";
 import { WeeksDotsCard } from "@/components/cards/WeeksDotsCard";
@@ -36,7 +35,14 @@ export default async function Home() {
             10,
         )
       : null;
-  const satisfactionSeries = data.scoreHistory.map((p) => p.avg * 10);
+  const firstName = (userId: string): string => {
+    const m = data.members.find((x) => x.user_id === userId);
+    return (m?.display_name ?? "").split(" ")[0] || "Partner";
+  };
+  const latestByMember = data.latestScores.map((s) => ({
+    name: firstName(s.user_id),
+    score: s.score,
+  }));
   const soloPartner = data.members.length < 2;
 
   return (
@@ -81,21 +87,28 @@ export default async function Home() {
                 <div className="grid gap-5 lg:gap-6 grid-cols-1 sm:grid-cols-2 items-start">
                   <HuddleStreakCard
                     streak={data.couple.current_streak}
+                    longest={data.couple.longest_streak}
+                    completedWeeks={data.recentCompletedWeeks}
+                    completedCount={data.completedCount}
                     huddleDoneThisWeek={
                       data.currentHuddle?.status === "completed" &&
                       data.currentHuddle.week_start === thisWeek
                     }
                   />
-                  <ConnectionScoreCard score={connectionScore} />
+                  <ConnectionScoreCard
+                    score={connectionScore}
+                    latest={latestByMember}
+                    history={data.scoreDetail}
+                  />
                 </div>
 
-                {/* Prominent widescreen live teaching */}
+                {/* Live teaching — honest placeholder until the schedule is real */}
                 <LiveTeachingCard />
 
                 {/* Four measurement squares */}
                 <div className="grid gap-4 lg:gap-5 grid-cols-2 lg:grid-cols-4">
                   <WeeksDotsCard sharedWeeks={data.sharedWeeks} />
-                  <SatisfactionCard series={satisfactionSeries} />
+                  <SatisfactionCard detail={data.scoreDetail} />
                   <NinetyDayLoopCard />
                   <PulseCard
                     current={data.currentHuddle}
@@ -106,6 +119,7 @@ export default async function Home() {
 
               {/* Right column */}
               <div className="lg:col-span-4 space-y-5 lg:space-y-6">
+                <JourneyCard />
                 <UpcomingCard plan={data.currentHuddle?.plan ?? null} />
                 <WeeklyPromptCard />
                 <JournalCard
@@ -113,15 +127,13 @@ export default async function Home() {
                   initialEntries={data.journalEntries}
                 />
                 <SomaticToolsCard />
-                <SubstackCard />
-                <NewsCard />
               </div>
             </div>
           </main>
         </div>
       </div>
 
-      <MobileNav />
+      <MobileNav active="home" />
     </div>
   );
 }

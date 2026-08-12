@@ -1,4 +1,5 @@
-import { BellIcon, HeartIcon, SettingsIcon, UserIcon } from "./icons";
+import Link from "next/link";
+import { HeartIcon, SettingsIcon, UserIcon } from "./icons";
 import { SignOutButton } from "./SignOutButton";
 
 function Avatar() {
@@ -66,20 +67,13 @@ export function Header({
 
       {/* Right actions */}
       <div className="flex items-center gap-2 sm:gap-3">
-        <button
-          type="button"
+        <Link
+          href="/account"
           className="size-9 rounded-full grid place-items-center text-cream-dim hover:bg-card hover:text-cream transition"
-          aria-label="Settings"
+          aria-label="Account"
         >
           <SettingsIcon className="size-[18px]" />
-        </button>
-        <button
-          type="button"
-          className="size-9 rounded-full grid place-items-center text-cream-dim hover:bg-card hover:text-cream transition relative"
-          aria-label="Notifications"
-        >
-          <BellIcon className="size-[18px]" />
-        </button>
+        </Link>
         <SignOutButton />
       </div>
     </header>
