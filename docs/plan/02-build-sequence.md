@@ -1,0 +1,84 @@
+# REWIRE Lab → Shortest Path to Quality (build sequence, planning)
+
+Companion to `00-REWIRE-LAB-PLAN.md` and `01-journey-architecture.md`. Phased by dependency, not by calendar, until **[SLOT 3 → TIMELINE]** is filled. No implementation here: this is sequencing and trade-offs.
+
+The governing constraints, restated once:
+
+→ Quality survives scale or the Lab becomes the thing the brand opposes (the PDS failure). Every phase gate below asks "does this show movement or just content?"
+→ The measurement spine blocks the journey engine, and the movement dictionary blocks the measurement spine, and the dictionary is Christian's clinical call. The critical path runs through his desk, not through code.
+→ The brand master also says this is a contraction season: the constraint is publication, not construction. This plan deliberately reuses everything already built (foundation, live station apps, Rescript-in-build, Inner Compass) and builds as little new as a real journey allows.
+
+---
+
+## Phase 0 → Prove and secure what exists (days, not weeks)
+
+1. Christian runs the FIRST ACTION test drive (master doc): confirm demo users, `verify:flow`, dev server, two-browser sync.
+2. Push the repo (4 local commits exist on one machine; that is a single-disk risk on real work).
+3. The two-browser realtime check and any bugs it surfaces.
+4. Decide domain + hosting target so later phases have a deploy destination (no deploy needed yet).
+
+Exit gate: the July foundation is verified working by its owner, and the code exists in more than one place.
+
+## Phase 1 → Make the existing product launch-worthy (the pre-journey floor)
+
+Not journey work: this is the floor any paid product needs regardless of what the journey becomes.
+
+→ **Entitlements**: replace the always-allow stub with the real `profiles.dashboard_access` check; wire the flag from the existing coupleforward-web Stripe checkout (payments live THERE, by prior decision; do not build billing twice).
+→ **Email**: production sender for auth + invites (invite emails currently do not send at all).
+→ **Deploy** to the chosen domain, with the auth redirect allowlist sorted.
+→ **Privacy floor**: deletion and export for huddle answers + journal, decided and built BEFORE real couples enter. Intimate content; this is not deferrable past first real users.
+→ **Huddle history UI** (data already persists; small surface, big honesty win).
+→ **Honesty pass on the shell**: any card or nav item that will not be real at launch either comes out or gets a truthful state. The prototype's aspirational shell was right for a prototype; it is wrong for a paid product aimed at an audience allergic to promised-not-delivered.
+
+Exit gate: a real couple could pay, sign in, huddle weekly, and trust the product with intimate content. This is launchable as "the Huddle membership" but per the packaging rule (program with an arc, not a content subscription), the recommendation is: DO NOT launch publicly yet; use Phase 1 to put 2-5 pilot couples (alumni, free or comped) into the real product. Pilot couples become the journey's first travelers in Phase 3 and the source of the launch proof. Trade-off flagged: waiting costs months of $47 subscriptions; launching a rhythm-only membership risks framing the Lab as exactly the subscription-to-content shape the audience rejects. The pilot path threads it.
+
+## Phase 2 → The measurement spine (blocks everything; starts with Christian, not code)
+
+Ordered before the journey engine on purpose: a journey UI without measurement is a course platform with a prettier map.
+
+1. **The movement dictionary, per node** [BLOCKING INPUT → Christian]. First drafts are pre-filled in the journey doc; he edits per node: what counts as moved, what behavioral signal pairs with each self-report.
+2. **Baseline decision** [Christian]: Inner Compass as mandatory on-ramp vs in-Lab baseline vs both (pricing/bundling consequence: does Lab membership include the assessment).
+3. **Instrument design** (joint): how each signal is actually captured: weekly pulse questions, in-the-moment catch logging, recovery-time capture, re-take cadence. Design for the two G.2 cautions: fluent self-narrators game self-report, so every self-report gets a behavioral pair.
+4. **The movement record** (engineering, after 1-3): the longitudinal per-person record the AI reads and the proof asset is built from. Conceptually: baseline, signals over time, per-node arrival evidence.
+
+Exit gate: for every v1 node, a one-line answer exists to "what moved and how did the system know," signed off by Christian.
+
+## Phase 3 → The journey engine MVP (the smallest real journey)
+
+Scope discipline: THREE nodes, one phase boundary, real measurement, stations by link-out. Candidate MVP journey (adjust to the final node map): **Node 1 (Where You Actually Are) → Node 2 (The Loop, Named) → Node 4 (The Observer Self)**, i.e., on-ramp → one Map It node → the hinge. Rationale: it exercises every engine mechanic (baseline, station trigger, movement gate, phase transition) and lands the member on the single most on-thesis capacity (real-time naming) fast enough to prove the product's promise.
+
+→ **Journey data layer**: nodes, per-member/per-couple position, practices, movement evidence. (Schema design happens here, under the same RLS discipline; conceptual list only in this plan.)
+→ **The map UI**: "Your Journey" surface: the path drawn, position shown, current node open, next node visible-but-gated. Beside the card grid first; replaces the home screen when it has earned it.
+→ **Station integration v1 = link-out + report-back**: journey sends the member to Mapping My Story (live app) with a named task; member (or the app, if a light integration is feasible after inspecting those repos) reports back; movement evidence recorded. No SSO build yet unless inspection shows it is nearly free (same Supabase project would make it nearly free: verify).
+→ **Practices ride the Huddle**: current node injects its practice into the Huddle plan stage. This is the moment the two layers fuse and the product stops being two products.
+→ **Accountability v1 = rules, not AI**: scheduled nudges keyed to node + signals (missed catch-logging, stalled dwell, huddle skipped). Deterministic, inspectable, honest. The adaptive AI voice arrives in Phase 5 once there is a movement record for it to read; do not ship an "AI coach" that is actually a drip campaign.
+→ **Witness fallback decision** executes here per the master doc Q5: video + noticing practice + catch log for v1, unless Christian prioritizes a minimal Witness build.
+→ **Pilot couples travel it.** Their movement records are the launch evidence.
+
+Exit gate: a pilot member has ARRIVED at a node on movement evidence, not completion. The system has correctly held someone back who finished content without movement. Both events witnessed in real data.
+
+## Phase 4 → Launch shape
+
+→ Video kit for the MVP nodes recorded and hosted (subset shoot list in `03-video-shoot-list.md`; host decided).
+→ Weekly live wired into the product (schedule surface real; his scarce-hours tier made visible): the Live Teaching card finally becomes true.
+→ Launch sequence per the pipeline master list: alumni email first, site placement second, ads third. Sales asset: the animated roadmap video (`04-animated-sales-video.md`), which reuses the now-final node map.
+→ Pricing surface: $47/month framed as the journey with a defined arc; show measured movement (pilot deltas, de-identified) not feature count.
+
+## Phase 5 → Deepen (post-launch, in whatever order the travelers force)
+
+→ Remaining nodes of the full map; remaining stations (Rescript module integration when its build lands, Transition, Compass).
+→ Adaptive AI accountability replacing rules where the movement record supports it: it optimizes toward the movement dictionary, and "finished but unmoved" is a state it must surface, not smooth over.
+→ SSO/deeper station embedding; Between at-rupture flows into the repair node.
+→ Guides tier (first hire the value ladder implies) once volume warrants; guide console reads the movement record.
+→ Solo-path polish or couples-path polish, whichever **[SLOT 4]** deferred.
+→ Track variants (Betrayal, Erotic Map, Transition track) as alternate node maps over the same engine. The engine is track-agnostic by design; do not special-case the first track.
+
+## Explicitly deferred (named so they do not creep)
+
+Native mobile apps; per-person path reordering (adaptive dwell only in v1); franchising/licensing surfaces; the 50+ segment variant (open brand question first); NARM/Feelings sidebar items unless a node claims them; any new standalone app.
+
+## Sequencing truths worth stating once
+
+→ Phases 1 and 2 can run in parallel: 1 is engineering, 2 starts as Christian's clinical writing.
+→ Phase 3 cannot start before 2's exit gate, and that gate is his, which makes the movement dictionary the single most schedule-critical artifact in the whole plan.
+→ The node map (SLOT 1) blocks the video shoot list and the sales video, but NOT Phases 0-2. There is real work available immediately regardless of when the drawing arrives.
