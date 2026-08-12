@@ -28,9 +28,13 @@ Not journey work: this is the floor any paid product needs regardless of what th
 → **Deploy** to the chosen domain, with the auth redirect allowlist sorted.
 → **Privacy floor**: deletion and export for huddle answers + journal, decided and built BEFORE real couples enter. Intimate content; this is not deferrable past first real users.
 → **Huddle history UI** (data already persists; small surface, big honesty win).
-→ **Honesty pass on the shell**: any card or nav item that will not be real at launch either comes out or gets a truthful state. The prototype's aspirational shell was right for a prototype; it is wrong for a paid product aimed at an audience allergic to promised-not-delivered.
+→ **The Huddle video explainer**: ingest Christian's existing Huddle course (locate the masters; the iCloud `03 Programs/Huddle Course` folder is currently empty and `30 Day Challenge & Huddle` holds covers/structure, so the video files live elsewhere: he points to them, they get hosted and wired into the Huddle flow and a course surface). This is upload-and-wire work, not a shoot.
+→ **The open app shelf**: every sidebar app either links out to its live counterpart (Mapping My Story, The Between, Adventures exist today) or gets a truthful state. All Lab members get all apps: this is now a launch requirement of the rhythm membership, not a journey deliverable. Minimum viable integration is a clean authenticated link-out; the SSO question (master doc Q4) gets answered here instead of Phase 3.
+→ **Honesty pass on the rest of the shell**: any card or nav item that will not be real at launch either comes out or gets a truthful state.
 
-Exit gate: a real couple could pay, sign in, huddle weekly, and trust the product with intimate content. This is launchable as "the Huddle membership" but per the packaging rule (program with an arc, not a content subscription), the recommendation is: DO NOT launch publicly yet; use Phase 1 to put 2-5 pilot couples (alumni, free or comped) into the real product. Pilot couples become the journey's first travelers in Phase 3 and the source of the launch proof. Trade-off flagged: waiting costs months of $47 subscriptions; launching a rhythm-only membership risks framing the Lab as exactly the subscription-to-content shape the audience rejects. The pilot path threads it.
+Exit gate: a real couple could pay, sign in, huddle weekly (with the course explaining it), use every app, watch their connection and satisfaction tracking, and trust the product with intimate content.
+
+**Launch posture, revised per the 2026-08-11 clarification.** The rhythm membership IS a legitimate public launch, because the Lab's own definition now includes it: Huddle anchor + all apps + tracking, with REWIRE Jr. always offered on top. The earlier caution (do not launch a rhythm-only Lab) is superseded; what remains of it is a framing rule, not a timing rule: the sales page leads with the ritual and the tracking it actually delivers, and presents the journey as the standing invitation, so the offer never reads as a content library. Pilot couples (2-5, alumni, comped) remain the right first move within this phase: they harden the rhythm product and become REWIRE Jr.'s first travelers in Phase 3.
 
 ## Phase 2 → The measurement spine (blocks everything; starts with Christian, not code)
 
@@ -49,7 +53,7 @@ Scope discipline: THREE nodes, one phase boundary, real measurement, stations by
 
 → **Journey data layer**: nodes, per-member/per-couple position, practices, movement evidence. (Schema design happens here, under the same RLS discipline; conceptual list only in this plan.)
 → **The map UI**: "Your Journey" surface: the path drawn, position shown, current node open, next node visible-but-gated. Beside the card grid first; replaces the home screen when it has earned it.
-→ **Station integration v1 = link-out + report-back**: journey sends the member to Mapping My Story (live app) with a named task; member (or the app, if a light integration is feasible after inspecting those repos) reports back; movement evidence recorded. No SSO build yet unless inspection shows it is nearly free (same Supabase project would make it nearly free: verify).
+→ **Station integration v1 = task + report-back on top of the shelf**: the shelf link-out already exists from Phase 1; the journey adds the named task ("trace one charged moment...") and the report-back that records movement evidence. Deeper app-side integration only if the Phase 1 SSO answer made it nearly free.
 → **Practices ride the Huddle**: current node injects its practice into the Huddle plan stage. This is the moment the two layers fuse and the product stops being two products.
 → **Accountability v1 = rules, not AI**: scheduled nudges keyed to node + signals (missed catch-logging, stalled dwell, huddle skipped). Deterministic, inspectable, honest. The adaptive AI voice arrives in Phase 5 once there is a movement record for it to read; do not ship an "AI coach" that is actually a drip campaign.
 → **Witness fallback decision** executes here per the master doc Q5: video + noticing practice + catch log for v1, unless Christian prioritizes a minimal Witness build.
@@ -62,7 +66,8 @@ Exit gate: a pilot member has ARRIVED at a node on movement evidence, not comple
 → Video kit for the MVP nodes recorded and hosted (subset shoot list in `03-video-shoot-list.md`; host decided).
 → Weekly live wired into the product (schedule surface real; his scarce-hours tier made visible): the Live Teaching card finally becomes true.
 → Launch sequence per the pipeline master list: alumni email first, site placement second, ads third. Sales asset: the animated roadmap video (`04-animated-sales-video.md`), which reuses the now-final node map.
-→ Pricing surface: $47/month framed as the journey with a defined arc; show measured movement (pilot deltas, de-identified) not feature count.
+→ Pricing surface: $47/month for the Lab (Huddle + all apps + tracking + weekly live), with REWIRE Jr. presented as the journey inside it; whether Jr. is included or an upgrade is the open packaging question (master doc Q0a). Show measured movement (pilot deltas, de-identified) not feature count.
+→ The full REWIRE intensive stays visibly at the top of the ladder from inside the Lab: always offered, never pushed.
 
 ## Phase 5 → Deepen (post-launch, in whatever order the travelers force)
 

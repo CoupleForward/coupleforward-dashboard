@@ -6,17 +6,17 @@ Companion to `00-REWIRE-LAB-PLAN.md`. This is the node/journey engine design at 
 
 ---
 
-## 1. The core reframe, restated as product mechanics
+## 1. The core reframe, restated as product mechanics (amended 2026-08-11)
 
-Today's dashboard is a hub: a grid of cards and a sidebar of apps, member picks what to tap. The REWIRE Lab inverts that. The home surface becomes a MAP: one path, drawn as nodes, with the couple's (or individual's) position visible on it. The member never goes shopping for the right tool; the journey hands them the right one at the moment it will work.
+The Lab stands on two anchors: the Huddle and the journey. Today's dashboard hub (cards, apps, tracking) is not replaced; it IS the rhythm membership, and it stays the home surface for every member. What gets added is the journey: for members who accept the standing invitation (Inner Compass → REWIRE Jr.), a MAP surface shows one path drawn as nodes with the couple's (or individual's) position on it. Inside the journey, the member never has to go shopping for the right tool: the path hands them the right one, with a specific task, at the moment it will work. Outside the journey, the shelf stays open: every Lab member can use every app freely, whether or not they ever travel.
 
 Three layers, stacked:
 
-→ **The journey layer** (new): the node path, position, arrival logic, station routing, the adaptive/accountability voice.
-→ **The rhythm layer** (already real): the weekly Huddle, the streak as cadence, the journal, upcoming rituals. This keeps running underneath every node, unchanged. The Huddle is also the journey's delivery vehicle: node practices and assignments ride into the week through the Huddle's plan stage.
-→ **The measurement layer** (new, and load-bearing): baseline, per-node movement signals, and the longitudinal record that proves change. This layer is the product's reason to exist. It is also the proof asset the brand cannot generate any other way.
+→ **The rhythm layer** (already real, and a complete membership by itself): the weekly Huddle (video-explained; Christian's existing Huddle course seeds this), the streak as cadence, the journal, upcoming rituals, connection/satisfaction tracking, and open access to all apps. This keeps running underneath every node, unchanged. The Huddle is also the journey's delivery vehicle: node practices and assignments ride into the week through the Huddle's plan stage.
+→ **The journey layer** (new, opt-in = REWIRE Jr.): the node path, position, arrival logic, station routing, the adaptive/accountability voice. Layers on top of the rhythm; never gates it.
+→ **The measurement layer** (new, and load-bearing): baseline, per-node movement signals, and the longitudinal record that proves change. Connection/satisfaction tracking serves ALL members; the per-node movement machinery belongs to travelers. This layer is the journey's reason to exist and the proof asset the brand cannot generate any other way.
 
-The anti-pattern to design against, permanently: a member who completes everything and moves nothing must be VISIBLE to the system as a failure state. If the UI, the data model, or the AI cannot represent "finished but unmoved," the Lab has become PDS.
+The anti-pattern to design against, permanently: a traveler who completes everything and moves nothing must be VISIBLE to the system as a failure state. If the UI, the data model, or the AI cannot represent "finished but unmoved," the journey has become PDS. (The rhythm membership is exempt from this test by design: it promises a ritual, tools, and tracking, and it must deliver exactly that, no more claimed.)
 
 ## 2. Anatomy of a node
 
@@ -59,6 +59,8 @@ Per the brand master: tools are stations on one journey, each with a trigger poi
 | **The Huddle** | REAL, built, syncing | Not a node: the metronome under all nodes, installed early and never removed |
 
 Integration depth is a build-sequence question (link-out first, SSO later, embedding last). Architecturally, all the journey engine requires of a station is: (a) the journey can send a member there with a specific task, and (b) the station reports back a movement-relevant signal.
+
+**Two hats per tool (the 2026-08-11 clarification made this explicit):** every tool is BOTH an open-shelf app available to all Lab members AND a station the journey triggers with a task for travelers. The shelf listing and the station trigger are different surfaces over the same tool. Rhythm members browse the shelf; travelers get handed the station. Nothing on the shelf is locked behind the journey.
 
 ## 4. The candidate node sequence
 
@@ -144,8 +146,8 @@ The per-node movement definitions above are FIRST DRAFTS assembled from the G.2 
 
 ## 6. What this means for the dashboard we have
 
-→ The Huddle survives untouched as the rhythm layer, and gains a delivery role (node practices ride in through the plan stage).
-→ The home surface eventually becomes the map. Near-term, a "Your Journey" surface can sit beside the current card grid before replacing it.
-→ The sidebar's dead app list dissolves into the map: stations appear when the journey triggers them, which finally makes the "Soon" badges honest.
-→ `connection_scores` and the completed-huddle history are the seed of the measurement layer; nothing built in July is wasted.
-→ The couple/member/RLS model carries the journey data without structural change (journey tables key off the same couple membership).
+→ The Huddle survives untouched as the first anchor, gains its video explainer (Christian's existing Huddle course, uploaded), and gains a delivery role for travelers (node practices ride in through the plan stage).
+→ The home surface STAYS the dashboard: cards, tracking, apps. That is the rhythm membership, and it was the original plan; it stands. A "Your Journey" surface joins it: for travelers, the map with their position; for rhythm members, the same map as a standing invitation (see where the path goes, take the Inner Compass, start REWIRE Jr.).
+→ The sidebar's app list becomes the open shelf, real for every member: each item links to its live app (three exist today) or its in-Lab tool. The journey does not gate the shelf; it adds station tasks on top. "Soon" badges become honest by shipping the links, not by hiding them behind the map.
+→ `connection_scores` and the completed-huddle history are the seed of the measurement layer and they serve BOTH modes: rhythm members see their tracking (the original dashboard promise); travelers additionally accrue movement evidence.
+→ The couple/member/RLS model carries both modes without structural change (journey tables key off the same couple membership; a member's mode is just the presence or absence of journey state).

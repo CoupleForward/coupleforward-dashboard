@@ -23,10 +23,23 @@ Solo variants: where a node's solo path differs materially (Nodes 6-7 especially
 |---|---|---|---|
 | J1 | **Welcome to the Lab** | The whole map in one pass: where you are, where this goes, how the system works, what is measured and why. Sets the anti-PDS contract explicitly: this ends, and you will see what moved | 4-6 min |
 | J2 | **How the Map Works** | Mechanics: nodes, arrival, the Huddle underneath, stations arriving when triggered, what the AI does and does not do | 3-4 min |
-| J3 | **The Huddle** | Already the strongest built asset; a guide video for the six stages (the flow's written coaching copy is the script's first draft) | 5-8 min |
+| J3 | **The Huddle** | NOT a new shoot: Christian's existing Huddle course gets uploaded and wired in (locate the masters; iCloud `03 Programs/Huddle Course` is empty and `30 Day Challenge & Huddle` holds covers only). Gap check after ingest: if the course predates the app's six-stage flow, record one short bridge video mapping course to app | course + 0-1 bridge |
 | J4-J6 | **Phase gateways** (Map It / Rewire It / Lock It In) | Marking the three phase crossings as real transitions; the "you are not who you were at Node 1" beats | 2-3 min each |
 | J7 | **Graduation** | The arc closes: the delta, the choice of continuation shape | 3-4 min |
 | J8 | **For the partner who just joined** | The late-arriving partner's on-ramp: what your partner has been doing here, how you enter without starting over | 3-4 min |
+
+## Rhythm-member videos (new section, per the 2026-08-11 clarification)
+
+The Lab's rhythm membership (Huddle + open app shelf + tracking, no journey required) needs its own small video set, and it ships in Phase 1, before any node video exists:
+
+| # | Video | Job | Length |
+|---|---|---|---|
+| R1 | **The Huddle course** | Existing asset, uploaded (J3 above) | as-is |
+| R2 | **Welcome to the Lab (rhythm cut)** | The membership as it is: the ritual, the shelf, the tracking, and the standing invitation named once, warmly, without pressure | 2-3 min |
+| R3-R5 | **App shelf orientations** | One short per live app (Mapping My Story, The Between, Adventures): what it is, when you'd reach for it, 60-90 seconds each. More added as tools land | 1-2 min each |
+| R6 | **Your numbers** | What connection and satisfaction tracking is and is not: honest framing (these are your weekly pulse, not a verdict on your marriage) | 2 min |
+
+J1 (Welcome to the Lab, journey version) then builds ON R2 rather than replacing it: R2 is every member's front door, J1 is the traveler's.
 
 ## The fill-in table (locks when the node map locks)
 
@@ -50,7 +63,9 @@ One row per node. Columns map to the kit. Movement column pulls from the final m
 
 Full library at a 10-node map: 10 kits × 4 + ~3 solo alts + 8 journey-level ≈ **51 videos**. That is a season of shooting, not a prerequisite.
 
-**MVP shoot (Phase 3-4 of the build sequence) is much smaller**: kits for the three MVP nodes (12 videos) + J1, J2, J3 (J3 mostly scripted already by the Huddle flow's copy) + J4 (first phase gateway) = **16 videos, roughly two batched shoot days** once scripts exist. Everything else shoots after real travelers exist, which also means later videos get written knowing where pilots actually stalled.
+**Phase 1 (rhythm launch) needs only the R set**: the uploaded Huddle course + R2 + three app orientations + R6 ≈ **5 short new videos plus one upload**, a single light shoot day.
+
+**MVP journey shoot (Phase 3-4) is next**: kits for the three MVP nodes (12 videos) + J1, J2 + J4 (first phase gateway) + any J3 bridge = **~16 videos, roughly two batched shoot days** once scripts exist. Everything else shoots after real travelers exist, which also means later videos get written knowing where pilots actually stalled.
 
 ## Production notes (decisions, not gear specs)
 

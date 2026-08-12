@@ -34,7 +34,7 @@ Target 90-120 seconds. Christian VO throughout, private register, one viewer at 
 3. **The journey (0:25-1:10)** → the camera travels. Nodes ignite one by one; at each, one line, skill-named in movement language, e.g. "here, you learn to see the loop while you're standing in it" (Node 4), "here, a blowup stops costing you three days" (Node 7). Stations appear as small companions arriving AT the path, not a grid of apps. **[Node lines finalize from the movement dictionary + final map]**
 4. **The measurement beat (1:10-1:25)** → the path leaves a trace behind the travelers: a drawn line of what moved. "We don't count what you finished. We measure what changed." This beat is non-negotiable in any cut-down.
 5. **The arrival (1:25-1:45)** → the end state, concrete, Tuesday-night scale. The two threads move in step. The map zooms out ONCE, showing the whole arc just traveled: it has an end.
-6. **The door (1:45-2:00)** → the invitation: start where you actually are. Inner Compass as the entry step (solo-capable: "you can start alone"). URL. No urgency mechanics.
+6. **The door (1:45-2:00)** → the invitation: start where you actually are. Inner Compass as the entry step (solo-capable: "you can start alone"). URL. No urgency mechanics. Note: this video sells the JOURNEY (REWIRE Jr.); the Lab sales page it lands on also carries the rhythm membership (Huddle + apps + tracking) as the base offer, so the door line should say "inside the Lab" rather than implying the journey is the only way to be a member.
 
 Cut-downs: 60s (drop to 4-5 node ignitions), 30s (open + one node + measurement beat + door), plus the per-node vertical series from the reuse architecture.
 
