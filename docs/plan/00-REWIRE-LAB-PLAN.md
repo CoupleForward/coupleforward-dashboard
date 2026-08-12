@@ -16,14 +16,21 @@ Canonical copy lives in the repo at `docs/plan/` (versioned with the code). A re
 
 ## The one-paragraph target (amended 2026-08-11 per Christian's clarification)
 
-The REWIRE Lab stands on TWO anchors: the journey and the Huddle. Every Lab member gets the Huddle as their weekly ritual (video-explained, seeded by Christian's existing Huddle course), open access to ALL the apps and tools, and connection/satisfaction tracking: the original dashboard vision, intact as a real membership in its own right. On top of that rhythm sits the journey: every member carries a standing invitation to take the Inner Compass Assessment and step onto **REWIRE Jr.**, the node-based journey that takes a couple OR an individual from where they are to where they want to be. Each node is a destination that also teaches a new skill; the tools (Inner Compass, Mapping My Story, The Witness, The Between, Rescript, Adventures, Couple Forward Compass, Transition, the Way Forward Roadmap) double as stations on that journey, each triggered at exactly the stage where it becomes the right tool, and AI holds the traveler accountable. The full REWIRE intensive remains the top of the ladder, always offered. The non-negotiable for the journey: it must produce CHANGE and MEASURE change (movement), never completion, streaks, or logins. The value ladder keeps Christian's hours at the top (weekly live, workshops, retreats) while the system and hired guides carry the daily journey. Price point per the pipeline master list: $47/month.
+The REWIRE Lab stands on TWO anchors: the journey and the Huddle. Every Lab member gets the Huddle as their weekly ritual (video-explained, seeded by Christian's existing Huddle course), open access to ALL the apps and tools, and connection/satisfaction tracking: the original dashboard vision, intact as a real membership in its own right. On top of that rhythm sits the journey: every member carries a standing invitation to take the Inner Compass Assessment and step onto **the REWIRE journey** (just REWIRE, no sub-brand: naming settled 2026-08-11), the node-based journey that takes a couple OR an individual from where they are to where they want to be. Each node is a destination that also teaches a new skill; the tools (Inner Compass, Mapping My Story, The Witness, The Between, Rescript, Adventures, Couple Forward Compass, Transition, the Way Forward Roadmap) double as stations on that journey, each triggered at exactly the stage where it becomes the right tool, and AI holds the traveler accountable. The non-negotiable for the journey: it must produce CHANGE and MEASURE change (movement), never completion, streaks, or logins. The value ladder keeps Christian's hours at the top (weekly live, workshops, retreats) while the system and hired guides carry the daily journey.
 
 ### The two ways to be in the Lab
 
 → **Rhythm member**: runs the weekly Huddle, browses and uses every app freely, tracks connection and satisfaction, joins the weekly live. No journey obligation, ever. The invitation to more is always visible, never pushy.
-→ **REWIRE Jr. traveler**: a member who accepted the invitation. Same Lab, same Huddle, same apps, plus the node path, the station tasks, the movement measurement, and the accountability voice.
+→ **REWIRE traveler**: a member who accepted the invitation. Same Lab, same Huddle, same apps, plus the node path, the station tasks, the movement measurement, and the accountability voice.
 
-Design consequence that runs through every doc in this set: **the journey layers ON TOP of the rhythm membership and never gates it.** Apps are an open shelf for all members; the journey ADDITIONALLY hands travelers the right tool with a specific task at the right node. The anti-PDS packaging rule (defined arc, end state, measured movement) binds REWIRE Jr., while the rhythm membership is honestly what it says it is: a ritual, tools, and tracking, anchored by the Huddle.
+Design consequence that runs through every doc in this set: **the journey layers ON TOP of the rhythm membership and never gates it.** Apps are an open shelf for all members; the journey ADDITIONALLY hands travelers the right tool with a specific task at the right node. The anti-PDS packaging rule (defined arc, end state, measured movement) binds the REWIRE journey, while the rhythm membership is honestly what it says it is: a ritual, tools, and tracking, anchored by the Huddle.
+
+### Pricing model (direction set 2026-08-11, anchors still open)
+
+→ **$47/month is the base**: the rhythm membership.
+→ **The REWIRE journey is the upgrade inside the Lab.** Candidate mechanic, Christian's own: sign up for the Compass + REWIRE journey, the monthly subscription steps UP for the 90 days, then drops back to base after completion. A program with an arc, priced like one, inside a membership.
+→ Still to figure: the anchor price for the Inner Compass inside the Lab, the elevated monthly for the journey, and the edge mechanic: nodes gate on movement, not on calendar, so what happens at day 90 if the couple has not arrived (billing drops anyway and the journey continues at base? extends at the elevated rate? grace period?). The pricing promise and the movement-gated arc need to agree before this goes on a sales page.
+→ How the full high-touch REWIRE intensive ($5,200, anchoring toward $7,500) relates in copy to the in-Lab REWIRE journey is Christian's to define: same name, two configurations (system-guided in the Lab vs Christian-guided intensive). The ladder itself is unchanged: base Lab → in-Lab REWIRE journey → intensive/his hours at the top.
 
 ---
 
@@ -102,12 +109,13 @@ What to judge while testing: does the Huddle flow FEEL like the spine of a journ
 
 ## Open questions the plan cannot resolve alone
 
-Packaging (new, from the 2026-08-11 clarification):
+Packaging (updated 2026-08-11, second pass):
 
-0a. **Is REWIRE Jr. included in the $47/month, or an upgrade inside the Lab?** Included keeps one clean offer and makes the invitation frictionless; an upgrade tier creates a middle rung between the Lab and the full REWIRE intensive. Related: is "REWIRE Jr." the public name or the working name?
+0a. ~~Included vs upgrade~~ **DECIDED: $47/month is the base; the REWIRE journey is the upgrade** (subscription steps up for the 90 days, drops back after completion). Still open inside that decision: the Compass-in-Lab anchor price, the elevated monthly number, and the day-90-without-arrival mechanic (see the pricing model section above).
 0b. **What exactly does the standing invitation look like in-product?** A permanent journey card, a periodic prompt keyed to Huddle data, a personal note from Christian at milestones. This is a design decision with a tone constraint: always offered, never upsell-pressured (the audience's allergy is exactly this).
+0c. **Naming settled: it is just REWIRE.** No "Jr.", no sub-brand. Remaining copy question: distinguishing the in-Lab journey from the high-touch intensive when both carry the name.
 
-Clinical (his, and blocking for REWIRE Jr., not for the rhythm launch):
+Clinical (his, and blocking for the REWIRE journey, not for the rhythm launch):
 
 1. **The movement dictionary, per node.** The brand master's key open item. Each node needs "what counts as movement here, and how would the system know." The G.2 audience dictionary ("blowups don't destroy three days," "I can name it in real time," recovery time after rupture, the driveway brace) is the first draft; assigning signals to nodes is a clinical judgment. Until it exists the accountability AI has nothing to optimize toward. First-draft assignments are pre-filled in `01-journey-architecture.md`, marked as drafts for his edit.
 2. **Where the baseline comes from.** Inner Compass as the mandatory on-ramp instrument, an in-Lab shorter baseline, or both. Affects pricing bundling ($79/$199 Inner Compass vs $47/month Lab) and the measurement spine.
