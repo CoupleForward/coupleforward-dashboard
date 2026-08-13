@@ -7,8 +7,8 @@ import { ChevronRightIcon, RoadIcon } from "../icons";
 // the substance.
 export function JourneyCard() {
   return (
-    <Link href="/journey" className="block">
-      <Card className="hover:border-gold/40 transition">
+    <Link href="/journey" className="block h-full">
+      <Card className="h-full hover:border-gold/40 transition">
         <div className="flex items-start gap-3">
           <div className="size-10 rounded-xl bg-gold-soft grid place-items-center text-gold shrink-0">
             <RoadIcon className="size-5" />

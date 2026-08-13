@@ -51,14 +51,14 @@ export function ConnectionScoreCard({
         className="text-left w-full"
         aria-label="About your Connection Score"
       >
-        <Card className="flex flex-col min-h-[170px] hover:border-gold/40 transition cursor-pointer">
-          <div className="text-[13px] text-cream-dim">Connection Score</div>
+        <Card className="flex flex-col h-full hover:border-gold/40 transition cursor-pointer">
+          <div className="text-[11px] text-cream-dim">Connection Score</div>
 
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex-1 flex items-center justify-center py-1">
             <div className="relative">
               <svg
                 viewBox="0 0 180 110"
-                className="w-[180px] h-[110px] overflow-visible"
+                className="w-[144px] h-[88px] overflow-visible"
                 aria-hidden="true"
               >
                 <path
@@ -78,23 +78,23 @@ export function ConnectionScoreCard({
                   />
                 )}
               </svg>
-              <div className="absolute inset-x-0 bottom-1 text-center">
+              <div className="absolute inset-x-0 bottom-0.5 text-center">
                 {score === null ? (
-                  <span className="text-[12px] text-cream-mute">
+                  <span className="text-[11px] text-cream-mute">
                     Complete a Huddle
                   </span>
                 ) : (
                   <>
-                    <span className="text-[26px] font-semibold text-cream tabular-nums">
+                    <span className="text-[22px] font-semibold text-cream tabular-nums">
                       {value}
                     </span>
-                    <span className="text-cream-mute text-[13px]">/{MAX}</span>
+                    <span className="text-cream-mute text-[12px]">/{MAX}</span>
                   </>
                 )}
               </div>
             </div>
           </div>
-          <div className="text-[10px] text-cream-mute text-center">
+          <div className="text-[9.5px] text-cream-mute text-center">
             Tap for what this means
           </div>
         </Card>

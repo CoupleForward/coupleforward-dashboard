@@ -99,7 +99,8 @@ export default async function Home() {
             <div className="grid gap-5 lg:gap-6 grid-cols-1 lg:grid-cols-12">
               {/* Center column */}
               <div className="lg:col-span-8 space-y-5 lg:space-y-6">
-                <div className="grid gap-5 lg:gap-6 grid-cols-1 sm:grid-cols-2 items-start">
+                {/* Compact trio over the video window */}
+                <div className="grid gap-4 lg:gap-5 grid-cols-1 sm:grid-cols-3 items-stretch">
                   <HuddleStreakCard
                     streak={data.couple.current_streak}
                     longest={data.couple.longest_streak}
@@ -115,6 +116,7 @@ export default async function Home() {
                     latest={latestByMember}
                     history={data.scoreDetail}
                   />
+                  <JourneyCard />
                 </div>
 
                 {/* The video window, left side as before */}
@@ -149,9 +151,9 @@ export default async function Home() {
                 </div>
               </div>
 
-              {/* Right rail: journey + the daily rhythm */}
+              {/* Right rail: prompt on top, then the daily rhythm */}
               <div className="lg:col-span-4 space-y-5 lg:space-y-6">
-                <JourneyCard />
+                <WeeklyPromptCard />
                 {daily && (
                   <DailyCheckinCard
                     coupleId={data.couple.id}
@@ -174,8 +176,7 @@ export default async function Home() {
             </div>
 
             {/* The rail's tail, wrapped underneath the middle apps */}
-            <div className="mt-5 lg:mt-6 grid gap-5 lg:gap-6 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
-              <WeeklyPromptCard />
+            <div className="mt-5 lg:mt-6 grid gap-5 lg:gap-6 grid-cols-1 sm:grid-cols-2">
               <JournalCard
                 coupleId={data.couple.id}
                 initialEntries={data.journalEntries}

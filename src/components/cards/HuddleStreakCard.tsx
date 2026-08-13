@@ -35,28 +35,25 @@ export function HuddleStreakCard({
 
   return (
     <>
-      <Card className="flex flex-col gap-3">
+      <Card className="flex flex-col gap-2.5 h-full">
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="text-left flex items-start gap-3 group"
+          className="text-left flex items-start gap-2.5 group"
           aria-label="About your Huddle streak"
         >
-          <div className="size-10 rounded-xl bg-gold-soft grid place-items-center text-gold shrink-0">
-            <FlameIcon className="size-5" />
+          <div className="size-8 rounded-lg bg-gold-soft grid place-items-center text-gold shrink-0">
+            <FlameIcon className="size-4" />
           </div>
           <div className="flex flex-col min-w-0">
-            <div className="text-[11.5px] text-cream-dim group-hover:text-cream transition">
+            <div className="text-[11px] text-cream-dim group-hover:text-cream transition">
               Huddle Streak
             </div>
-            <div className="text-[28px] leading-none font-semibold text-cream mt-1">
+            <div className="text-[22px] leading-none font-semibold text-cream mt-0.5">
               {streak}{" "}
-              <span className="text-cream-dim text-[15px] font-normal">
+              <span className="text-cream-dim text-[13px] font-normal">
                 {streak === 1 ? "week" : "weeks"}
               </span>
-            </div>
-            <div className="text-[9px] tracking-[0.18em] uppercase text-cream-mute mt-1.5">
-              Your rhythm · tap for detail
             </div>
           </div>
         </button>
@@ -67,7 +64,7 @@ export function HuddleStreakCard({
             return (
               <span
                 key={i}
-                className={`size-[6px] rounded-full ${
+                className={`size-[5px] rounded-full ${
                   inStreak ? "bg-gold" : "bg-line"
                 }`}
               />
@@ -77,13 +74,13 @@ export function HuddleStreakCard({
 
         <Link
           href="/huddle"
-          className="mt-auto inline-flex items-center justify-center gap-1.5 rounded-full bg-gold text-[#1a1a1a] px-3.5 py-2 text-[12px] font-semibold hover:bg-gold-bright transition"
+          className="mt-auto inline-flex items-center justify-center gap-1.5 rounded-full bg-gold text-[#1a1a1a] px-3 py-1.5 text-[11.5px] font-semibold hover:bg-gold-bright transition"
         >
           {huddleDoneThisWeek
-            ? "Review this week's Huddle"
+            ? "Review this week"
             : streak === 0
               ? "Start your first Huddle"
-              : "Start this week's Huddle"}
+              : "Start this week"}
           <ChevronRightIcon className="size-3" />
         </Link>
       </Card>
