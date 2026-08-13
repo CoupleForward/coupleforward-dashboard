@@ -39,10 +39,11 @@ export function NavDrawer() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label="Open the app menu"
-        className="size-9 rounded-full grid place-items-center text-cream-dim hover:bg-card hover:text-cream transition shrink-0"
+        aria-label="Access apps"
+        className="inline-flex items-center gap-2 rounded-full border border-line-soft bg-card px-3.5 py-2 text-[12px] font-medium text-cream hover:border-gold/60 hover:text-gold transition shrink-0"
       >
-        <MenuIcon className="size-[18px]" />
+        <MenuIcon className="size-4" />
+        <span>Access Apps</span>
       </button>
 
       {open && (

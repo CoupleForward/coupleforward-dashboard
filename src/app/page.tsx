@@ -109,6 +109,12 @@ export default async function Home() {
                   }
                 />
               </div>
+              <div>
+                <LiveTeachingCard />
+              </div>
+              <div>
+                <JourneyCard />
+              </div>
               {daily && (
                 <div>
                   <DailyCheckinCard
@@ -161,9 +167,6 @@ export default async function Home() {
                 />
               </div>
               <div>
-                <JourneyCard />
-              </div>
-              <div>
                 <SatisfactionCard detail={data.scoreDetail} />
               </div>
               <div>
@@ -183,9 +186,6 @@ export default async function Home() {
               </div>
               <div>
                 <NinetyDayLoopCard />
-              </div>
-              <div>
-                <LiveTeachingCard />
               </div>
               <div>
                 <SomaticToolsCard />
