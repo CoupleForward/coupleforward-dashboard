@@ -8,6 +8,7 @@ import {
   EyeIcon,
   HeartIcon,
   HuddleIcon,
+  LotusIcon,
   MapIcon,
   NarmIcon,
   PauseIcon,
@@ -66,6 +67,15 @@ export const SHELF_APPS: ShelfApp[] = [
     status: "live",
     href: "https://adventures.coupleforward.com",
     external: true,
+  },
+  {
+    key: "meditate",
+    label: "Guided Meditations",
+    description:
+      "Short practices for settling your system: before a hard conversation, or just before dinner.",
+    icon: LotusIcon,
+    status: "live",
+    href: "/meditate",
   },
   {
     key: "videos",
