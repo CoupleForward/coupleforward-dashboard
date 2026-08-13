@@ -199,11 +199,17 @@ export async function getDashboardData(
   };
 }
 
-// "Jonathan & Elena" from member display names.
+// "Jonathan & Elena" from member display names. While a partner invite is
+// pending, show the invited name alongside so the couple reads whole before
+// the partner has joined. A solo member shows just their own name.
 export function coupleDisplayName(ctx: LabContext): string {
   const names = ctx.members.map(
     (m) => (m.display_name ?? "").split(" ")[0] || "Partner",
   );
-  if (names.length === 2) return `${names[0]} & ${names[1]}`;
-  return names[0] ?? "Your couple";
+  if (names.length >= 2) return `${names[0]} & ${names[1]}`;
+  const me = names[0] ?? "You";
+  if (!ctx.couple.is_solo && ctx.pendingInvite?.invited_name) {
+    return `${me} & ${ctx.pendingInvite.invited_name.split(" ")[0]}`;
+  }
+  return me;
 }

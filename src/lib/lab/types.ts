@@ -8,6 +8,7 @@ export type Couple = {
   current_streak: number;
   longest_streak: number;
   last_huddle_week: string | null;
+  is_solo: boolean;
   created_at: string;
 };
 
@@ -23,6 +24,7 @@ export type CoupleInvite = {
   id: string;
   couple_id: string;
   invited_email: string;
+  invited_name: string | null;
   invited_by: string;
   status: "pending" | "accepted" | "revoked";
   created_at: string;

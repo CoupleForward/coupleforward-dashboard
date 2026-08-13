@@ -1,6 +1,8 @@
 -- Tightens three RLS gaps surfaced by adversarial review on 2026-08-11.
--- DRAFT — NOT YET APPLIED TO LIVE. Per repo policy, apply only in a
--- supervised session via the Supabase MCP apply_migration.
+-- APPLIED TO LIVE 2026-08-12 (supervised, Christian present) via the
+-- Supabase MCP apply_migration. Verified: WITH CHECK present on all three
+-- policies, couple_members UPDATE grant restricted to display_name only,
+-- anon RLS suite 11/11.
 --
 -- 1. couple_members UPDATE had no WITH CHECK, so a member could re-point
 --    their own membership row's couple_id at any couple whose UUID they

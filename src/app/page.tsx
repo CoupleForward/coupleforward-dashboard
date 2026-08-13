@@ -43,7 +43,9 @@ export default async function Home() {
     name: firstName(s.user_id),
     score: s.score,
   }));
-  const soloPartner = data.members.length < 2;
+  // A one-member couple is only "waiting for a partner" if it isn't a
+  // deliberate solo journey. Solo members get no partner nag.
+  const soloPartner = data.members.length < 2 && !data.couple.is_solo;
 
   return (
     <div className="min-h-screen bg-bg text-cream">
@@ -65,10 +67,11 @@ export default async function Home() {
                   <>
                     Waiting for{" "}
                     <span className="text-gold">
-                      {data.pendingInvite.invited_email}
+                      {data.pendingInvite.invited_name ??
+                        data.pendingInvite.invited_email}
                     </span>{" "}
-                    to join — they&apos;ll see the invite when they sign in
-                    with that email.
+                    to join. They&apos;ll see the invite when they sign in with
+                    that email.
                   </>
                 ) : (
                   <>

@@ -1,8 +1,9 @@
 "use client";
 
-// Couple setup: accept a pending invite addressed to you, or create your
-// couple and invite your partner. Reached after sign-in when the user has
-// no couple yet (or an incomplete one).
+// Couple setup after sign-in for a user with no couple yet. Three entry
+// states: accept a pending invite addressed to you; or start fresh, choosing
+// between a couple (invite a partner) and a solo journey (a couple of one).
+// Your own name is always captured here — it is what the dashboard shows.
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -14,14 +15,33 @@ import type { CoupleInvite, CoupleMember } from "@/lib/lab/types";
 type View =
   | { kind: "loading" }
   | { kind: "invited"; invites: CoupleInvite[] }
-  | { kind: "create" }
+  | { kind: "start" }
   | { kind: "invite_partner"; coupleId: string; pending: CoupleInvite | null };
+
+// Save the signed-in member's own display name on their couple_members row.
+// Allowed by the display_name column grant + "updates own row" policy.
+async function saveMyName(
+  supabase: ReturnType<typeof createSupabaseBrowserClient>,
+  name: string,
+) {
+  const clean = name.trim();
+  if (!clean) return;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+  await supabase
+    .from("couple_members")
+    .update({ display_name: clean })
+    .eq("user_id", user.id);
+}
 
 export default function WelcomePage() {
   const router = useRouter();
   const [view, setView] = useState<View>({ kind: "loading" });
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [myName, setMyName] = useState("");
 
   const load = useCallback(async () => {
     const supabase = createSupabaseBrowserClient();
@@ -69,7 +89,7 @@ export default function WelcomePage() {
     if (invites && invites.length > 0) {
       setView({ kind: "invited", invites: invites as CoupleInvite[] });
     } else {
-      setView({ kind: "create" });
+      setView({ kind: "start" });
     }
   }, [router]);
 
@@ -78,17 +98,23 @@ export default function WelcomePage() {
   }, [load]);
 
   const accept = async (inviteId: string) => {
+    if (myName.trim().length < 1) {
+      setError("Add your name first.");
+      return;
+    }
     setBusy(true);
     setError(null);
     const supabase = createSupabaseBrowserClient();
     const { error } = await supabase.rpc("accept_couple_invite", {
       p_invite_id: inviteId,
     });
-    setBusy(false);
     if (error) {
+      setBusy(false);
       setError(error.message);
       return;
     }
+    await saveMyName(supabase, myName);
+    setBusy(false);
     router.replace("/");
     router.refresh();
   };
@@ -116,7 +142,15 @@ export default function WelcomePage() {
               Your partner set up your couple&apos;s dashboard and invited you
               to join it.
             </p>
-            <div className="mt-5 space-y-3">
+            <div className="mt-5">
+              <TextField
+                label="Your name"
+                value={myName}
+                onChange={setMyName}
+                placeholder="What should we call you?"
+              />
+            </div>
+            <div className="mt-4 space-y-3">
               {view.invites.map((inv) => (
                 <button
                   key={inv.id}
@@ -136,12 +170,8 @@ export default function WelcomePage() {
           </div>
         )}
 
-        {view.kind === "create" && (
-          <CreateCoupleForm
-            onDone={() => void load()}
-            onError={setError}
-            error={error}
-          />
+        {view.kind === "start" && (
+          <StartForm onDone={() => void load()} />
         )}
 
         {view.kind === "invite_partner" && (
@@ -156,60 +186,151 @@ export default function WelcomePage() {
   );
 }
 
-function CreateCoupleForm({
-  onDone,
-  onError,
-  error,
-}: {
-  onDone: () => void;
-  onError: (e: string | null) => void;
-  error: string | null;
-}) {
+function StartForm({ onDone }: { onDone: () => void }) {
+  const [choice, setChoice] = useState<"couple" | "solo" | null>(null);
+  const [myName, setMyName] = useState("");
+  const [partnerName, setPartnerName] = useState("");
+  const [partnerEmail, setPartnerEmail] = useState("");
   const [coupleName, setCoupleName] = useState("");
   const [togetherSince, setTogetherSince] = useState("");
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const create = async () => {
-    setBusy(true);
-    onError(null);
-    const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.rpc("create_couple", {
-      p_name: coupleName.trim() || null,
-      p_together_since: togetherSince || null,
-    });
-    setBusy(false);
-    if (error) {
-      onError(error.message);
+    if (myName.trim().length < 1) {
+      setError("Add your name first.");
       return;
     }
+    setBusy(true);
+    setError(null);
+    const supabase = createSupabaseBrowserClient();
+
+    const { data: coupleId, error: rpcError } = await supabase.rpc(
+      "create_couple",
+      {
+        p_name: coupleName.trim() || null,
+        p_together_since: togetherSince || null,
+      },
+    );
+    if (rpcError) {
+      setBusy(false);
+      setError(rpcError.message);
+      return;
+    }
+
+    await saveMyName(supabase, myName);
+
+    // Mark solo, or send the partner invite (with their name for the header).
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const cid = coupleId as string;
+
+    if (choice === "solo") {
+      await supabase.from("couples").update({ is_solo: true }).eq("id", cid);
+    } else if (partnerEmail.trim().length > 3) {
+      await supabase.from("couple_invites").insert({
+        couple_id: cid,
+        invited_email: partnerEmail.trim().toLowerCase(),
+        invited_name: partnerName.trim() || null,
+        invited_by: user?.id,
+      });
+    }
+
+    setBusy(false);
     onDone();
   };
 
+  if (!choice) {
+    return (
+      <div>
+        <h1 className="text-[22px] font-semibold text-cream">
+          Let&apos;s get you set up.
+        </h1>
+        <p className="mt-1.5 text-[12.5px] text-cream-mute leading-snug">
+          The Lab works whether you&apos;re doing this together or on your own.
+        </p>
+        <div className="mt-6 space-y-3">
+          <button
+            type="button"
+            onClick={() => setChoice("couple")}
+            className="w-full text-left rounded-xl bg-card-2/70 border border-line-soft/70 px-5 py-4 hover:border-gold/50 transition"
+          >
+            <div className="text-[14.5px] font-medium text-cream">
+              My partner and I
+            </div>
+            <div className="text-[12px] text-cream-dim mt-0.5">
+              You&apos;ll invite them, and you&apos;ll share one dashboard.
+            </div>
+          </button>
+          <button
+            type="button"
+            onClick={() => setChoice("solo")}
+            className="w-full text-left rounded-xl bg-card-2/70 border border-line-soft/70 px-5 py-4 hover:border-gold/50 transition"
+          >
+            <div className="text-[14.5px] font-medium text-cream">Just me</div>
+            <div className="text-[12px] text-cream-dim mt-0.5">
+              Start on your own. You can invite a partner any time later.
+            </div>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const isCouple = choice === "couple";
+
   return (
     <div>
-      <h1 className="text-[22px] font-semibold text-cream">
-        Set up your couple.
+      <button
+        type="button"
+        onClick={() => setChoice(null)}
+        className="text-[12px] text-cream-dim hover:text-cream transition"
+      >
+        ← Back
+      </button>
+      <h1 className="mt-2 text-[22px] font-semibold text-cream">
+        {isCouple ? "Set up your couple." : "Set up your space."}
       </h1>
       <p className="mt-1.5 text-[12.5px] text-cream-mute leading-snug">
-        This creates the shared space you and your partner will both see.
-        You&apos;ll invite them in the next step.
+        {isCouple
+          ? "This creates the space you and your partner will both see."
+          : "This is your private space. A partner can join it later."}
       </p>
+
       <div className="mt-6 space-y-3.5">
+        <TextField
+          label="Your name"
+          value={myName}
+          onChange={setMyName}
+          placeholder="What should we call you?"
+        />
+        {isCouple && (
+          <>
+            <TextField
+              label="Partner's name (optional)"
+              value={partnerName}
+              onChange={setPartnerName}
+              placeholder="Their first name"
+            />
+            <TextField
+              label="Partner's email"
+              type="email"
+              value={partnerEmail}
+              onChange={setPartnerEmail}
+              placeholder="partner@example.com"
+            />
+          </>
+        )}
+        <TextField
+          label={isCouple ? "Couple name (optional)" : "Name your space (optional)"}
+          value={coupleName}
+          onChange={setCoupleName}
+          placeholder={isCouple ? "e.g. The Charettes" : "e.g. My Compass"}
+        />
         <label className="block">
           <span className="text-[10px] font-semibold tracking-[0.16em] uppercase text-cream-mute">
-            Couple name (optional)
-          </span>
-          <input
-            type="text"
-            value={coupleName}
-            onChange={(e) => setCoupleName(e.target.value)}
-            placeholder="e.g. The Charettes"
-            className="mt-1.5 w-full rounded-xl bg-card-2/80 border border-line-soft/60 px-4 py-2.5 text-[13.5px] text-cream placeholder:text-cream-mute/60 focus:outline-none focus:border-gold/50 transition"
-          />
-        </label>
-        <label className="block">
-          <span className="text-[10px] font-semibold tracking-[0.16em] uppercase text-cream-mute">
-            Together since (optional)
+            {isCouple ? "Together since (optional)" : "Since (optional)"}
           </span>
           <input
             type="date"
@@ -219,6 +340,7 @@ function CreateCoupleForm({
           />
         </label>
       </div>
+
       {error && <p className="mt-4 text-[12.5px] text-[#e08a8a]">{error}</p>}
       <button
         type="button"
@@ -226,7 +348,11 @@ function CreateCoupleForm({
         disabled={busy}
         className="mt-6 w-full rounded-full bg-gold text-[#1a1a1a] px-5 py-2.5 text-[13.5px] font-semibold hover:bg-gold-bright transition disabled:opacity-40"
       >
-        {busy ? "Creating…" : "Create our space"}
+        {busy
+          ? "Setting up…"
+          : isCouple
+            ? "Create our space"
+            : "Create my space"}
       </button>
     </div>
   );
@@ -241,6 +367,7 @@ function InvitePartnerForm({
   pending: CoupleInvite | null;
   onChanged: () => void;
 }) {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -255,8 +382,11 @@ function InvitePartnerForm({
     const { error } = await supabase.from("couple_invites").insert({
       couple_id: coupleId,
       invited_email: email.trim().toLowerCase(),
+      invited_name: name.trim() || null,
       invited_by: user?.id,
     });
+    // No longer solo once a partner is invited.
+    await supabase.from("couples").update({ is_solo: false }).eq("id", coupleId);
     setBusy(false);
     if (error) {
       setError(error.message);
@@ -283,8 +413,8 @@ function InvitePartnerForm({
         Invite your partner.
       </h1>
       <p className="mt-1.5 text-[12.5px] text-cream-mute leading-snug">
-        Your space is ready. Your partner creates their own account with the
-        email you invite, and the two of you share one dashboard.
+        Your space is ready. Your partner signs in with the email you invite,
+        and the two of you share one dashboard.
       </p>
 
       {pending ? (
@@ -293,12 +423,13 @@ function InvitePartnerForm({
             Invite pending
           </div>
           <div className="mt-1 text-[13.5px] text-cream">
-            {pending.invited_email}
+            {pending.invited_name
+              ? `${pending.invited_name} · ${pending.invited_email}`
+              : pending.invited_email}
           </div>
           <p className="mt-1.5 text-[11.5px] text-cream-mute leading-snug">
             They&apos;ll see this invite as soon as they sign in with that
-            email. No email is sent yet — tell them to create an account at
-            this same address.
+            email. Tell them to sign in at this same address.
           </p>
           <button
             type="button"
@@ -310,27 +441,26 @@ function InvitePartnerForm({
           </button>
         </div>
       ) : (
-        <div className="mt-6">
-          <label className="block">
-            <span className="text-[10px] font-semibold tracking-[0.16em] uppercase text-cream-mute">
-              Partner&apos;s email
-            </span>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="partner@example.com"
-              className="mt-1.5 w-full rounded-xl bg-card-2/80 border border-line-soft/60 px-4 py-2.5 text-[13.5px] text-cream placeholder:text-cream-mute/60 focus:outline-none focus:border-gold/50 transition"
-            />
-          </label>
-          {error && (
-            <p className="mt-3 text-[12.5px] text-[#e08a8a]">{error}</p>
-          )}
+        <div className="mt-6 space-y-3.5">
+          <TextField
+            label="Partner's name (optional)"
+            value={name}
+            onChange={setName}
+            placeholder="Their first name"
+          />
+          <TextField
+            label="Partner's email"
+            type="email"
+            value={email}
+            onChange={setEmail}
+            placeholder="partner@example.com"
+          />
+          {error && <p className="text-[12.5px] text-[#e08a8a]">{error}</p>}
           <button
             type="button"
             onClick={invite}
             disabled={busy || email.trim().length < 4}
-            className="mt-4 w-full rounded-full bg-gold text-[#1a1a1a] px-5 py-2.5 text-[13.5px] font-semibold hover:bg-gold-bright transition disabled:opacity-40"
+            className="w-full rounded-full bg-gold text-[#1a1a1a] px-5 py-2.5 text-[13.5px] font-semibold hover:bg-gold-bright transition disabled:opacity-40"
           >
             {busy ? "Inviting…" : "Send invite"}
           </button>
@@ -344,5 +474,34 @@ function InvitePartnerForm({
         Continue to the dashboard →
       </Link>
     </div>
+  );
+}
+
+function TextField({
+  label,
+  type = "text",
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  type?: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
+  return (
+    <label className="block">
+      <span className="text-[10px] font-semibold tracking-[0.16em] uppercase text-cream-mute">
+        {label}
+      </span>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="mt-1.5 w-full rounded-xl bg-card-2/80 border border-line-soft/60 px-4 py-2.5 text-[13.5px] text-cream placeholder:text-cream-mute/60 focus:outline-none focus:border-gold/50 transition"
+      />
+    </label>
   );
 }
