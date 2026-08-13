@@ -3,6 +3,8 @@ import { Header } from "@/components/Header";
 import { MobileNav } from "@/components/MobileNav";
 import { Sidebar } from "@/components/Sidebar";
 import { ConnectionScoreCard } from "@/components/cards/ConnectionScoreCard";
+import { DailyCheckinCard } from "@/components/cards/DailyCheckinCard";
+import { DailyTrendsCard } from "@/components/cards/DailyTrendsCard";
 import { HuddleStreakCard } from "@/components/cards/HuddleStreakCard";
 import { JournalCard } from "@/components/cards/JournalCard";
 import { JourneyCard } from "@/components/cards/JourneyCard";
@@ -14,6 +16,7 @@ import { SomaticToolsCard } from "@/components/cards/SomaticToolsCard";
 import { UpcomingCard } from "@/components/cards/UpcomingCard";
 import { WeeklyPromptCard } from "@/components/cards/WeeklyPromptCard";
 import { WeeksDotsCard } from "@/components/cards/WeeksDotsCard";
+import { getDailyCheckins } from "@/lib/lab/checkins";
 import { coupleDisplayName, getDashboardData, getLabContext } from "@/lib/lab/data";
 import { weekStart } from "@/lib/lab/week";
 
@@ -26,6 +29,15 @@ export default async function Home() {
 
   const data = await getDashboardData(ctx);
   const thisWeek = weekStart();
+  // Null until migration 20260812150000 is applied; the daily surfaces
+  // stay dark until then, no code change needed.
+  const checkins = await getDailyCheckins(ctx.couple.id);
+  const memberNames = Object.fromEntries(
+    data.members.map((m) => [
+      m.user_id,
+      (m.display_name ?? "").split(" ")[0] || "Partner",
+    ]),
+  );
 
   const connectionScore =
     data.latestScores.length > 0
@@ -122,6 +134,21 @@ export default async function Home() {
 
               {/* Right column */}
               <div className="lg:col-span-4 space-y-5 lg:space-y-6">
+                {checkins && (
+                  <DailyCheckinCard
+                    coupleId={data.couple.id}
+                    userId={data.userId}
+                    todayRows={checkins.today}
+                    memberNames={memberNames}
+                  />
+                )}
+                {checkins && checkins.recent.length > 0 && (
+                  <DailyTrendsCard
+                    recent={checkins.recent}
+                    userId={data.userId}
+                    memberNames={memberNames}
+                  />
+                )}
                 <JourneyCard />
                 <UpcomingCard plan={data.currentHuddle?.plan ?? null} />
                 <WeeklyPromptCard />

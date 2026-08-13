@@ -9,6 +9,15 @@
 // deploying: key weeks in one fixed timezone for everyone, or derive the
 // week client-side and pass it to the server. Do not deploy as is.
 
+// Local YYYY-MM-DD for daily check-in keys. Pure and client-safe: this
+// module must never import server-only code (it is used in client bundles).
+export function dayKey(from: Date = new Date()): string {
+  const y = from.getFullYear();
+  const m = (from.getMonth() + 1).toString().padStart(2, "0");
+  const d = from.getDate().toString().padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 export function weekStart(from: Date = new Date()): string {
   const d = new Date(from);
   const day = d.getDay(); // Sun=0 … Sat=6

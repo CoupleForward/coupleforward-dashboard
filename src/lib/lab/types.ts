@@ -78,6 +78,18 @@ export type JournalEntry = {
   updated_at: string;
 };
 
+export type DailyCheckin = {
+  id: string;
+  couple_id: string;
+  user_id: string;
+  day: string; // local YYYY-MM-DD
+  mood: number;
+  happiness: number;
+  connection: number;
+  created_at: string;
+  updated_at: string;
+};
+
 export type ConnectionScore = {
   id: string;
   couple_id: string;
