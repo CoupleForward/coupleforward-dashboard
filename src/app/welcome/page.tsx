@@ -18,22 +18,24 @@ type View =
   | { kind: "start" }
   | { kind: "invite_partner"; coupleId: string; pending: CoupleInvite | null };
 
-// Save the signed-in member's own display name on their couple_members row.
-// Allowed by the display_name column grant + "updates own row" policy.
-async function saveMyName(
+// Save the signed-in member's own display name and birthday on their
+// couple_members row. Allowed by the column grant + "updates own row"
+// policy (display_name and birthday are the only member-updatable columns).
+async function saveMyDetails(
   supabase: ReturnType<typeof createSupabaseBrowserClient>,
   name: string,
+  birthday: string,
 ) {
   const clean = name.trim();
-  if (!clean) return;
+  const patch: { display_name?: string; birthday?: string } = {};
+  if (clean) patch.display_name = clean;
+  if (birthday) patch.birthday = birthday;
+  if (Object.keys(patch).length === 0) return;
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return;
-  await supabase
-    .from("couple_members")
-    .update({ display_name: clean })
-    .eq("user_id", user.id);
+  await supabase.from("couple_members").update(patch).eq("user_id", user.id);
 }
 
 export default function WelcomePage() {
@@ -42,6 +44,7 @@ export default function WelcomePage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [myName, setMyName] = useState("");
+  const [myBirthday, setMyBirthday] = useState("");
 
   const load = useCallback(async () => {
     const supabase = createSupabaseBrowserClient();
@@ -113,7 +116,7 @@ export default function WelcomePage() {
       setError(error.message);
       return;
     }
-    await saveMyName(supabase, myName);
+    await saveMyDetails(supabase, myName, myBirthday);
     setBusy(false);
     router.replace("/");
     router.refresh();
@@ -142,13 +145,28 @@ export default function WelcomePage() {
               Your partner set up your couple&apos;s dashboard and invited you
               to join it.
             </p>
-            <div className="mt-5">
+            <div className="mt-5 space-y-3.5">
               <TextField
                 label="Your name"
                 value={myName}
                 onChange={setMyName}
                 placeholder="What should we call you?"
               />
+              <label className="block">
+                <span className="text-[10px] font-semibold tracking-[0.16em] uppercase text-cream-mute">
+                  Your birthday (optional)
+                </span>
+                <input
+                  type="date"
+                  value={myBirthday}
+                  onChange={(e) => setMyBirthday(e.target.value)}
+                  max={new Date().toISOString().slice(0, 10)}
+                  className="mt-1.5 w-full rounded-xl bg-card-2/80 border border-line-soft/60 px-4 py-2.5 text-[13.5px] text-cream focus:outline-none focus:border-gold/50 transition [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-60"
+                />
+                <span className="mt-1 block text-[10.5px] text-cream-mute">
+                  Powers the 4,000 Weeks horizon. You can add it later.
+                </span>
+              </label>
             </div>
             <div className="mt-4 space-y-3">
               {view.invites.map((inv) => (
@@ -189,6 +207,7 @@ export default function WelcomePage() {
 function StartForm({ onDone }: { onDone: () => void }) {
   const [choice, setChoice] = useState<"couple" | "solo" | null>(null);
   const [myName, setMyName] = useState("");
+  const [myBirthday, setMyBirthday] = useState("");
   const [partnerName, setPartnerName] = useState("");
   const [partnerEmail, setPartnerEmail] = useState("");
   const [coupleName, setCoupleName] = useState("");
@@ -218,7 +237,7 @@ function StartForm({ onDone }: { onDone: () => void }) {
       return;
     }
 
-    await saveMyName(supabase, myName);
+    await saveMyDetails(supabase, myName, myBirthday);
 
     // Mark solo, or send the partner invite (with their name for the header).
     const {
@@ -305,6 +324,21 @@ function StartForm({ onDone }: { onDone: () => void }) {
           onChange={setMyName}
           placeholder="What should we call you?"
         />
+        <label className="block">
+          <span className="text-[10px] font-semibold tracking-[0.16em] uppercase text-cream-mute">
+            Your birthday (optional)
+          </span>
+          <input
+            type="date"
+            value={myBirthday}
+            onChange={(e) => setMyBirthday(e.target.value)}
+            max={new Date().toISOString().slice(0, 10)}
+            className="mt-1.5 w-full rounded-xl bg-card-2/80 border border-line-soft/60 px-4 py-2.5 text-[13.5px] text-cream focus:outline-none focus:border-gold/50 transition [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-60"
+          />
+          <span className="mt-1 block text-[10.5px] text-cream-mute">
+            Powers the 4,000 Weeks horizon. You can add it later.
+          </span>
+        </label>
         {isCouple && (
           <>
             <TextField
