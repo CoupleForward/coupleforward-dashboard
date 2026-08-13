@@ -13,6 +13,7 @@ import {
   PauseIcon,
   PencilIcon,
   RoadIcon,
+  VideoIcon,
 } from "@/components/icons";
 
 export type ShelfApp = {
@@ -65,6 +66,15 @@ export const SHELF_APPS: ShelfApp[] = [
     status: "live",
     href: "https://adventures.coupleforward.com",
     external: true,
+  },
+  {
+    key: "videos",
+    label: "Video Library",
+    description:
+      "Every teaching in the Lab, in one place. Watch, rewatch, share one with your partner.",
+    icon: VideoIcon,
+    status: "live",
+    href: "/videos",
   },
   {
     key: "witness",

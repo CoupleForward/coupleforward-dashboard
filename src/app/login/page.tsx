@@ -20,13 +20,21 @@ function LoginForm() {
   );
   const [sent, setSent] = useState(false);
 
-  const submit = async () => {
+  const submit = async (formEmail: string) => {
+    // Trust the form's actual value over React state: browser autofill can
+    // fill the field without firing onChange, and the button must still work.
+    const target = (formEmail || email).trim();
+    if (!target || !target.includes("@")) {
+      setError("Enter your email address first.");
+      return;
+    }
+    setEmail(target);
     setBusy(true);
     setError(null);
     const supabase = createSupabaseBrowserClient();
     try {
       const { error } = await supabase.auth.signInWithOtp({
-        email: email.trim(),
+        email: target,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
@@ -40,7 +48,6 @@ function LoginForm() {
     }
   };
 
-  const canSubmit = email.trim().length > 3;
 
   return (
     <div className="min-h-screen bg-bg text-cream flex flex-col items-center justify-center px-5">
@@ -54,7 +61,9 @@ function LoginForm() {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          if (canSubmit && !busy) submit();
+          if (busy) return;
+          const field = e.currentTarget.elements.namedItem("email");
+          submit(field instanceof HTMLInputElement ? field.value : "");
         }}
         className="w-full max-w-sm rounded-2xl bg-card border border-line-soft px-6 py-7"
       >
@@ -116,7 +125,7 @@ function LoginForm() {
 
             <button
               type="submit"
-              disabled={!canSubmit || busy}
+              disabled={busy}
               className="mt-6 w-full rounded-full bg-gold text-[#1a1a1a] px-5 py-2.5 text-[13.5px] font-semibold hover:bg-gold-bright transition disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {busy ? "Sending…" : "Email me a sign-in link"}

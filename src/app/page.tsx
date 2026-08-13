@@ -7,7 +7,7 @@ import { DailyTrendsCard } from "@/components/cards/DailyTrendsCard";
 import { HuddleStreakCard } from "@/components/cards/HuddleStreakCard";
 import { JournalCard } from "@/components/cards/JournalCard";
 import { JourneyCard } from "@/components/cards/JourneyCard";
-import { LiveTeachingCard } from "@/components/cards/LiveTeachingCard";
+import { VideoWindowCard } from "@/components/cards/VideoWindowCard";
 import { NinetyDayLoopCard } from "@/components/cards/NinetyDayLoopCard";
 import { PulseCard } from "@/components/cards/PulseCard";
 import { SatisfactionCard } from "@/components/cards/SatisfactionCard";
@@ -119,8 +119,10 @@ export default async function Home() {
                   <JourneyCard />
                 </div>
 
-                {/* The video window, left side as before */}
-                <LiveTeachingCard />
+                {/* The video window, left side as before — the featured
+                    teaching plays in place; the card's bottom bar links
+                    to the Video Library (Christian, 2026-08-13). */}
+                <VideoWindowCard />
 
                 {/* Four measurement squares */}
                 <div className="grid gap-4 lg:gap-5 grid-cols-2 xl:grid-cols-4">
