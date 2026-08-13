@@ -6,7 +6,6 @@ import { PartnerInvite } from "@/components/PartnerInvite";
 import { ExportDataButton } from "@/components/ExportDataButton";
 import { Header } from "@/components/Header";
 import { MobileNav } from "@/components/MobileNav";
-import { Sidebar } from "@/components/Sidebar";
 import { SignOutButton } from "@/components/SignOutButton";
 import { ArrowLeftIcon } from "@/components/icons";
 import { coupleDisplayName, getLabContext } from "@/lib/lab/data";
@@ -33,8 +32,7 @@ export default async function AccountPage() {
 
   return (
     <div className="min-h-screen bg-bg text-cream">
-      <div className="mx-auto flex min-h-screen max-w-[1440px]">
-        <Sidebar />
+      <div className="mx-auto flex min-h-screen w-full max-w-[1720px]">
 
         <div className="flex-1 flex flex-col min-w-0">
           <Header

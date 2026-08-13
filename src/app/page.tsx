@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { Header } from "@/components/Header";
 import { MobileNav } from "@/components/MobileNav";
-import { Sidebar } from "@/components/Sidebar";
 import { ConnectionScoreCard } from "@/components/cards/ConnectionScoreCard";
 import { DailyCheckinCard } from "@/components/cards/DailyCheckinCard";
 import { DailyTrendsCard } from "@/components/cards/DailyTrendsCard";
@@ -59,8 +58,7 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-bg text-cream">
-      <div className="mx-auto flex min-h-screen max-w-[1440px]">
-        <Sidebar />
+      <div className="mx-auto flex min-h-screen w-full max-w-[1720px]">
 
         <div className="flex-1 flex flex-col min-w-0">
           <Header
@@ -94,62 +92,25 @@ export default async function Home() {
               </div>
             )}
 
-            <div className="grid gap-5 lg:gap-6 grid-cols-1 lg:grid-cols-12">
-              {/* Center column */}
-              <div className="lg:col-span-8 space-y-5 lg:space-y-6">
-                <div className="grid gap-5 lg:gap-6 grid-cols-1 sm:grid-cols-2 items-start">
-                  <HuddleStreakCard
-                    streak={data.couple.current_streak}
-                    longest={data.couple.longest_streak}
-                    completedWeeks={data.recentCompletedWeeks}
-                    completedCount={data.completedCount}
-                    huddleDoneThisWeek={
-                      data.currentHuddle?.status === "completed" &&
-                      data.currentHuddle.week_start === thisWeek
-                    }
-                  />
-                  <ConnectionScoreCard
-                    score={connectionScore}
-                    latest={latestByMember}
-                    history={data.scoreDetail}
-                  />
-                </div>
-
-                {/* Live teaching — honest placeholder until the schedule is real */}
-                <LiveTeachingCard />
-
-                {/* Four measurement squares */}
-                <div className="grid gap-4 lg:gap-5 grid-cols-2 lg:grid-cols-4">
-                  <WeeksDotsCard
-                    sharedWeeks={data.sharedWeeks}
-                    togetherSince={data.couple.together_since}
-                    me={{
-                      name: "You",
-                      birthday:
-                        data.members.find((m) => m.user_id === data.userId)
-                          ?.birthday ?? null,
-                    }}
-                    partner={
-                      partner
-                        ? {
-                            name: partnerName ?? "Partner",
-                            birthday: partner.birthday ?? null,
-                          }
-                        : null
-                    }
-                  />
-                  <SatisfactionCard detail={data.scoreDetail} />
-                  <NinetyDayLoopCard />
-                  <PulseCard
-                    current={data.currentHuddle}
-                    previous={data.previousHuddle}
-                  />
-                </div>
+            {/* Tile flow: cards wrap into as many columns as the width
+                allows, keeping the dashboard square-ish on desktop
+                (Christian's layout call, 2026-08-13). Column flow is
+                top-to-bottom, left-to-right. */}
+            <div className="columns-1 sm:columns-2 xl:columns-3 2xl:columns-4 gap-5 [&>*]:mb-5 [&>*]:break-inside-avoid">
+              <div>
+                <HuddleStreakCard
+                  streak={data.couple.current_streak}
+                  longest={data.couple.longest_streak}
+                  completedWeeks={data.recentCompletedWeeks}
+                  completedCount={data.completedCount}
+                  huddleDoneThisWeek={
+                    data.currentHuddle?.status === "completed" &&
+                    data.currentHuddle.week_start === thisWeek
+                  }
+                />
               </div>
-
-              {/* Right column */}
-              <div className="lg:col-span-4 space-y-5 lg:space-y-6">
-                {daily && (
+              {daily && (
+                <div>
                   <DailyCheckinCard
                     coupleId={data.couple.id}
                     userId={data.userId}
@@ -158,21 +119,75 @@ export default async function Home() {
                     hasPartner={data.members.length > 1}
                     streaks={daily.streaks}
                   />
-                )}
-                {daily && daily.rows.length > 0 && (
+                </div>
+              )}
+              <div>
+                <ConnectionScoreCard
+                  score={connectionScore}
+                  latest={latestByMember}
+                  history={data.scoreDetail}
+                />
+              </div>
+              {daily && daily.rows.length > 0 && (
+                <div>
                   <DailyTrendsCard
                     rows={daily.rows}
                     streaks={daily.streaks}
                     hasPartner={data.members.length > 1}
                   />
-                )}
-                <JourneyCard />
+                </div>
+              )}
+              <div>
                 <UpcomingCard plan={data.currentHuddle?.plan ?? null} />
+              </div>
+              <div>
+                <WeeksDotsCard
+                  sharedWeeks={data.sharedWeeks}
+                  togetherSince={data.couple.together_since}
+                  me={{
+                    name: "You",
+                    birthday:
+                      data.members.find((m) => m.user_id === data.userId)
+                        ?.birthday ?? null,
+                  }}
+                  partner={
+                    partner
+                      ? {
+                          name: partnerName ?? "Partner",
+                          birthday: partner.birthday ?? null,
+                        }
+                      : null
+                  }
+                />
+              </div>
+              <div>
+                <JourneyCard />
+              </div>
+              <div>
+                <SatisfactionCard detail={data.scoreDetail} />
+              </div>
+              <div>
                 <WeeklyPromptCard />
+              </div>
+              <div>
+                <PulseCard
+                  current={data.currentHuddle}
+                  previous={data.previousHuddle}
+                />
+              </div>
+              <div>
                 <JournalCard
                   coupleId={data.couple.id}
                   initialEntries={data.journalEntries}
                 />
+              </div>
+              <div>
+                <NinetyDayLoopCard />
+              </div>
+              <div>
+                <LiveTeachingCard />
+              </div>
+              <div>
                 <SomaticToolsCard />
               </div>
             </div>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { NavDrawer } from "./NavDrawer";
 import { HeartIcon, SettingsIcon, UserIcon } from "./icons";
 import { SignOutButton } from "./SignOutButton";
 
@@ -37,12 +38,15 @@ export function Header({
 
   return (
     <header className="flex items-center justify-between gap-6 px-4 py-4 sm:px-6 lg:px-8 border-b border-line-soft">
-      {/* Logo (mobile only — sidebar already shows it on desktop) */}
-      <div className="flex items-center gap-2 lg:hidden">
-        <HeartIcon className="size-5 text-gold" />
-        <span className="font-medium tracking-[0.18em] text-[11px] text-cream">
-          COUPLE FORWARD
-        </span>
+      {/* Drawer trigger + brand (the permanent sidebar is gone) */}
+      <div className="flex items-center gap-2.5">
+        <NavDrawer />
+        <Link href="/" className="flex items-center gap-2">
+          <HeartIcon className="size-5 text-gold" />
+          <span className="hidden sm:inline font-medium tracking-[0.18em] text-[11px] text-cream">
+            COUPLE FORWARD
+          </span>
+        </Link>
       </div>
 
       {/* Couple identity */}

@@ -47,32 +47,18 @@ function lifeWeeks(p: WeeksPerson, sharedWeeks: number | null): LifeWeeks | null
 }
 
 const DOT = { before: "#5b554b", together: "#c8963e", ahead: "#2f2f2f" };
-// Marker red for birthdays and the anniversary in the detail grids. The
-// "weeks left" ring uses cream (#d7cdbc), the brand's second voice next
-// to gold, hardcoded in the ring class below.
+// Red belongs to anniversaries (every year, from the first). Birthdays get
+// a single cream dot at the next one. The "weeks left" ring uses cream
+// (#d7cdbc) hardcoded in its class below.
 const MARK_RED = "#c4574d";
+const MARK_CREAM = "#f5f0e8";
 
-// Date of the next annual occurrence of an event, from today.
-function nextOccurrence(eventISO: string): Date {
-  const ev = new Date(`${eventISO}T12:00:00`);
-  const now = new Date();
-  const next = new Date(now.getFullYear(), ev.getMonth(), ev.getDate(), 12);
-  if (next.getTime() < now.getTime()) next.setFullYear(next.getFullYear() + 1);
-  return next;
-}
-
-// Week index (on a life grid starting at birth) of the next annual
-// occurrence of an event date, counted from today forward.
-function nextOccurrenceIndex(birthISO: string, eventISO: string): number {
-  const birth = new Date(`${birthISO}T12:00:00`).getTime();
-  return Math.floor((nextOccurrence(eventISO).getTime() - birth) / WEEK_MS);
-}
-
-// Weeks from now until the event's next occurrence.
-function weeksFromNow(eventISO: string): number {
-  return Math.max(
-    0,
-    Math.floor((nextOccurrence(eventISO).getTime() - Date.now()) / WEEK_MS),
+// Week index of one date on a life grid that starts at another.
+function weeksBetween(startISO: string, eventISO: string): number {
+  return Math.floor(
+    (new Date(`${eventISO}T12:00:00`).getTime() -
+      new Date(`${startISO}T12:00:00`).getTime()) /
+      WEEK_MS,
   );
 }
 
@@ -98,19 +84,24 @@ function segmentColorAt(week: number, segments: Segment[]): string {
 
 function DotCalendar({
   segments,
-  markers = [],
+  red = [],
+  cream = [],
 }: {
   segments: Segment[];
-  markers?: number[]; // week indices; the block holding one turns red
+  red?: number[]; // anniversary week indices
+  cream?: number[]; // next-birthday week index
 }) {
   const COLS = 20;
   const ROWS = 8;
   const BLOCK = TOTAL_WEEKS / (COLS * ROWS);
-  const markedBlocks = new Set(
-    markers
-      .filter((m) => m >= 0 && m < TOTAL_WEEKS)
-      .map((m) => Math.floor(m / BLOCK)),
-  );
+  const toBlocks = (arr: number[]) =>
+    new Set(
+      arr
+        .filter((m) => m >= 0 && m < TOTAL_WEEKS)
+        .map((m) => Math.floor(m / BLOCK)),
+    );
+  const redBlocks = toBlocks(red);
+  const creamBlocks = toBlocks(cream);
   return (
     <div
       className="grid gap-[3px] w-full"
@@ -123,9 +114,11 @@ function DotCalendar({
             key={i}
             className="aspect-square w-full rounded-full"
             style={{
-              backgroundColor: markedBlocks.has(i)
+              backgroundColor: redBlocks.has(i)
                 ? MARK_RED
-                : segmentColorAt(mid, segments),
+                : creamBlocks.has(i)
+                  ? MARK_CREAM
+                  : segmentColorAt(mid, segments),
             }}
           />
         );
@@ -231,16 +224,18 @@ function InteractiveRings({
 // (next birthday, next anniversary) get the red dot.
 function LifeGrid({
   weeks,
-  markers = [],
+  red = [],
+  cream = [],
 }: {
   weeks: LifeWeeks;
-  markers?: number[];
+  red?: number[]; // anniversaries, every year
+  cream?: number[]; // the next birthday
 }) {
   const COLS = 52;
   const rows = Math.ceil(TOTAL_WEEKS / COLS); // 77
-  const marked = new Set(
-    markers.filter((m) => m >= 0 && m < TOTAL_WEEKS),
-  );
+  const inRange = (m: number) => m >= 0 && m < TOTAL_WEEKS;
+  const redSet = new Set(red.filter(inRange));
+  const creamSet = new Set(cream.filter(inRange));
   return (
     <svg
       viewBox={`0 0 ${COLS} ${rows}`}
@@ -256,7 +251,13 @@ function LifeGrid({
           width={0.72}
           height={0.72}
           rx={0.36}
-          fill={marked.has(i) ? MARK_RED : DOT[stateAt(i, weeks)]}
+          fill={
+            redSet.has(i)
+              ? MARK_RED
+              : creamSet.has(i)
+                ? MARK_CREAM
+                : DOT[stateAt(i, weeks)]
+          }
         />
       ))}
     </svg>
@@ -268,7 +269,8 @@ function Legend() {
     { color: DOT.before, label: "before us" },
     { color: DOT.together, label: "together" },
     { color: DOT.ahead, label: "ahead" },
-    { color: MARK_RED, label: "next birthday · anniversary" },
+    { color: MARK_RED, label: "when we began" },
+    { color: MARK_CREAM, label: "birth" },
   ];
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10.5px] text-cream-mute">
@@ -293,15 +295,17 @@ function WeeksFace({
   leftTogether,
   mine,
   faceLine,
-  togetherMarkers,
-  youMarkers,
+  togetherRed,
+  youRed,
+  youCream,
 }: {
   shared: number | null;
   leftTogether: number | null;
   mine: LifeWeeks | null;
   faceLine: string;
-  togetherMarkers: number[];
-  youMarkers: number[];
+  togetherRed: number[];
+  youRed: number[];
+  youCream: number[];
 }) {
   const [tab, setTab] = useState<"together" | "you">("together");
 
@@ -324,7 +328,7 @@ function WeeksFace({
         </div>
         <div className="mt-2.5">
           <DotCalendar
-            markers={togetherMarkers}
+            red={togetherRed}
             segments={[
               { count: shared ?? 0, color: DOT.together },
               { count: leftTogether ?? 0, color: DOT.ahead },
@@ -350,7 +354,8 @@ function WeeksFace({
         </div>
         <div className="mt-2.5">
           <DotCalendar
-            markers={youMarkers}
+            red={youRed}
+            cream={youCream}
             segments={[
               { count: mine.before, color: DOT.before },
               { count: mine.together, color: DOT.together },
@@ -429,22 +434,18 @@ export function WeeksDotsCard({
         ? TOTAL_WEEKS - shared
         : null;
 
-  // Red markers for the detail grids: the next birthday and the next
-  // anniversary, one dot each, placed on each person's own timeline.
-  const markersFor = (p: WeeksPerson): number[] => {
-    if (!p.birthday) return [];
-    const m = [nextOccurrenceIndex(p.birthday, p.birthday)];
-    if (togetherSince) m.push(nextOccurrenceIndex(p.birthday, togetherSince));
-    return m;
-  };
-
-  // Face-calendar markers: the next anniversary on the shared timeline,
-  // and the viewer's birthday + anniversary on their own timeline.
-  const togetherMarkers =
-    togetherSince && shared !== null
-      ? [shared + weeksFromNow(togetherSince)]
+  // Two origin marks only (Christian's call, 2026-08-13): red = the week
+  // the two of you began, cream = the birth week. No recurring markers.
+  const beganFor = (p: WeeksPerson): number[] =>
+    p.birthday && togetherSince
+      ? [weeksBetween(p.birthday, togetherSince)]
       : [];
-  const youMarkers = markersFor(me);
+  const birthDotFor = (p: WeeksPerson): number[] => (p.birthday ? [0] : []);
+
+  // The shared timeline starts AT the beginning: its first dot is the day.
+  const togetherRed = togetherSince && shared !== null ? [0] : [];
+  const youRed = beganFor(me);
+  const youCream = birthDotFor(me);
 
   const faceLine = (() => {
     if (leftTogether !== null && shared !== null)
@@ -474,8 +475,9 @@ export function WeeksDotsCard({
           leftTogether={leftTogether}
           mine={mine}
           faceLine={faceLine}
-          togetherMarkers={togetherMarkers}
-          youMarkers={youMarkers}
+          togetherRed={togetherRed}
+          youRed={youRed}
+          youCream={youCream}
         />
       </Card>
 
@@ -518,7 +520,11 @@ export function WeeksDotsCard({
             </div>
             {mine && (
               <DepthSection heading={`${me.name} · a life in weeks`}>
-                <LifeGrid weeks={mine} markers={markersFor(me)} />
+                <LifeGrid
+                  weeks={mine}
+                  red={beganFor(me)}
+                  cream={birthDotFor(me)}
+                />
                 <div className="mt-2 flex justify-between text-[11px] text-cream-mute">
                   <span>
                     {mine.lived.toLocaleString()} lived ·{" "}
@@ -532,7 +538,11 @@ export function WeeksDotsCard({
             )}
             {partner && theirs && (
               <DepthSection heading={`${partner.name} · a life in weeks`}>
-                <LifeGrid weeks={theirs} markers={markersFor(partner)} />
+                <LifeGrid
+                  weeks={theirs}
+                  red={beganFor(partner)}
+                  cream={birthDotFor(partner)}
+                />
                 <div className="mt-2 flex justify-between text-[11px] text-cream-mute">
                   <span>
                     {theirs.lived.toLocaleString()} lived ·{" "}

@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { Card } from "@/components/Card";
 import { Header } from "@/components/Header";
 import { MobileNav } from "@/components/MobileNav";
-import { Sidebar } from "@/components/Sidebar";
 import { ArrowLeftIcon } from "@/components/icons";
 import { coupleDisplayName, getLabContext } from "@/lib/lab/data";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -44,8 +43,7 @@ export default async function JournalPage() {
 
   return (
     <div className="min-h-screen bg-bg text-cream">
-      <div className="mx-auto flex min-h-screen max-w-[1440px]">
-        <Sidebar />
+      <div className="mx-auto flex min-h-screen w-full max-w-[1720px]">
 
         <div className="flex-1 flex flex-col min-w-0">
           <Header
