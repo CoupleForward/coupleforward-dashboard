@@ -120,7 +120,23 @@ export default async function Home() {
 
                 {/* Four measurement squares */}
                 <div className="grid gap-4 lg:gap-5 grid-cols-2 lg:grid-cols-4">
-                  <WeeksDotsCard sharedWeeks={data.sharedWeeks} />
+                  <WeeksDotsCard
+                    sharedWeeks={data.sharedWeeks}
+                    me={{
+                      name: "You",
+                      birthday:
+                        data.members.find((m) => m.user_id === data.userId)
+                          ?.birthday ?? null,
+                    }}
+                    partner={
+                      partner
+                        ? {
+                            name: partnerName ?? "Partner",
+                            birthday: partner.birthday ?? null,
+                          }
+                        : null
+                    }
+                  />
                   <SatisfactionCard detail={data.scoreDetail} />
                   <NinetyDayLoopCard />
                   <PulseCard

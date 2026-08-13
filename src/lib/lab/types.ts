@@ -17,6 +17,7 @@ export type CoupleMember = {
   user_id: string;
   role: "owner" | "partner";
   display_name: string | null;
+  birthday: string | null; // YYYY-MM-DD; column ships in 20260812170000
   joined_at: string;
 };
 

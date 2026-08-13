@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { BirthdaySetter } from "@/components/BirthdaySetter";
 import { Card, CardLabel } from "@/components/Card";
 import { ExportDataButton } from "@/components/ExportDataButton";
 import { Header } from "@/components/Header";
@@ -24,6 +25,10 @@ export default async function AccountPage() {
   const ctx = await getLabContext();
   if (ctx.state === "signed_out") redirect("/login");
   if (ctx.state === "no_couple") redirect("/welcome");
+
+  const self = ctx.members.find((m) => m.user_id === ctx.userId);
+  const partnerMember =
+    ctx.members.find((m) => m.user_id !== ctx.userId) ?? null;
 
   return (
     <div className="min-h-screen bg-bg text-cream">
@@ -78,6 +83,27 @@ export default async function AccountPage() {
                     <span className="text-cream-mute">Members since</span>
                     <span>{fmtDate(ctx.couple.created_at)}</span>
                   </div>
+                </div>
+              </Card>
+
+              <Card className="mt-4">
+                <CardLabel>Your weeks</CardLabel>
+                <p className="mt-3 text-[13px] text-cream-dim leading-relaxed">
+                  Your birthday powers the 4,000 Weeks horizon: your weeks
+                  lived, your weeks ahead, and the horizon you two share.
+                </p>
+                <div className="mt-4">
+                  <BirthdaySetter
+                    userId={ctx.userId}
+                    initial={self?.birthday ?? null}
+                    partnerName={
+                      partnerMember
+                        ? (partnerMember.display_name ?? "").split(" ")[0] ||
+                          "Partner"
+                        : null
+                    }
+                    partnerBirthday={partnerMember?.birthday ?? null}
+                  />
                 </div>
               </Card>
 
