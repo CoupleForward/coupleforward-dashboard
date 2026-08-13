@@ -8,6 +8,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardLabel } from "../Card";
+import { FaceScale } from "../FaceScale";
 import { CheckIcon, FlameIcon } from "../icons";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { dayKey } from "@/lib/lab/week";
@@ -20,44 +21,6 @@ const QUESTIONS = [
 ] as const;
 
 type QKey = (typeof QUESTIONS)[number]["key"];
-
-function ScaleRow({
-  label,
-  hint,
-  value,
-  onPick,
-}: {
-  label: string;
-  hint: string;
-  value: number | null;
-  onPick: (n: number) => void;
-}) {
-  return (
-    <div>
-      <div className="flex items-baseline justify-between">
-        <span className="text-[12px] font-medium text-cream">{label}</span>
-        <span className="text-[10px] text-cream-mute">{hint}</span>
-      </div>
-      <div className="mt-1.5 grid grid-cols-10 gap-1">
-        {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
-          <button
-            key={n}
-            type="button"
-            onClick={() => onPick(n)}
-            aria-label={`${label}: ${n} of 10`}
-            className={`h-8 rounded-md text-[11px] tabular-nums transition ${
-              value === n
-                ? "bg-gold text-[#1a1a1a] font-semibold"
-                : "bg-card-2/70 border border-line-soft/60 text-cream-dim hover:border-gold/40"
-            }`}
-          >
-            {n}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 export function DailyCheckinCard({
   coupleId,
@@ -136,7 +99,7 @@ export function DailyCheckinCard({
             sees the blended picture, never your numbers.
           </p>
           {QUESTIONS.map((q) => (
-            <ScaleRow
+            <FaceScale
               key={q.key}
               label={q.label}
               hint={q.hint}

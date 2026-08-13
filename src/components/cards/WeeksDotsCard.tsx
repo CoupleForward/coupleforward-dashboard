@@ -54,17 +54,24 @@ function stateAt(week: number, w: LifeWeeks): keyof typeof DOT {
   return "ahead";
 }
 
-// Compact strip for the card face: 40 dots, each standing for 100 weeks.
-function LifeStrip({ weeks }: { weeks: LifeWeeks }) {
-  const BLOCK = TOTAL_WEEKS / 40;
+// Compact calendar of dots for the card face: 20 columns by 8 rows, each
+// dot standing for 25 weeks of the viewer's 4,000. Wraps like a calendar,
+// never overflows the card.
+function LifeCalendar({ weeks }: { weeks: LifeWeeks }) {
+  const COLS = 20;
+  const ROWS = 8;
+  const BLOCK = TOTAL_WEEKS / (COLS * ROWS);
   return (
-    <div className="flex gap-[3px]">
-      {Array.from({ length: 40 }, (_, i) => {
+    <div
+      className="grid gap-[3px] w-full"
+      style={{ gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))` }}
+    >
+      {Array.from({ length: COLS * ROWS }, (_, i) => {
         const mid = Math.floor(i * BLOCK + BLOCK / 2);
         return (
           <span
             key={i}
-            className="size-[5px] rounded-full shrink-0"
+            className="aspect-square w-full rounded-full"
             style={{ backgroundColor: DOT[stateAt(mid, weeks)] }}
           />
         );
@@ -133,7 +140,6 @@ export function WeeksDotsCard({
   const [open, setOpen] = useState(false);
 
   const shared = sharedWeeks;
-  const pct = shared === null ? 0 : Math.min(1, shared / TOTAL_WEEKS);
 
   const mine = lifeWeeks(me, sharedWeeks);
   const theirs = partner ? lifeWeeks(partner, sharedWeeks) : null;
@@ -164,69 +170,43 @@ export function WeeksDotsCard({
             A life, in weeks
           </div>
 
-          <div className="flex-1 flex items-center justify-center mt-1">
-            <div className="relative">
-              <svg
-                width="96"
-                height="96"
-                viewBox="0 0 100 100"
-                aria-hidden="true"
-              >
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="42"
-                  fill="none"
-                  strokeWidth="5"
-                  className="stroke-line/60"
-                />
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="42"
-                  fill="none"
-                  strokeWidth="5"
-                  strokeLinecap="round"
-                  pathLength={100}
-                  strokeDasharray={`${(pct * 100).toFixed(2)} 100`}
-                  transform="rotate(-90 50 50)"
-                  className="stroke-gold"
-                />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <div className="text-[22px] font-semibold text-cream leading-none tabular-nums">
-                  {shared ?? "—"}
-                </div>
-                <div className="text-[8.5px] tracking-[0.14em] uppercase text-cream-mute mt-0.5">
-                  shared
-                </div>
-              </div>
+          <div className="mt-3 space-y-1 text-[11px]">
+            <div className="flex justify-between gap-3">
+              <span className="text-cream-mute">Weeks together</span>
+              <span className="text-cream tabular-nums">
+                {shared !== null ? shared.toLocaleString() : "—"}
+              </span>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span className="text-cream-mute">Weeks left, together</span>
+              <span className="text-cream tabular-nums">
+                {togetherAhead !== null
+                  ? togetherAhead.toLocaleString()
+                  : "—"}
+              </span>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span className="text-cream-mute">Weeks lived, you</span>
+              <span className="text-cream tabular-nums">
+                {mine ? mine.lived.toLocaleString() : "—"}
+              </span>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span className="text-cream-mute">Weeks left, you</span>
+              <span className="text-cream tabular-nums">
+                {mine ? mine.left.toLocaleString() : "—"}
+              </span>
             </div>
           </div>
 
-          {(mine || theirs) && (
-            <div className="space-y-1.5 mt-1">
-              {mine && (
-                <div>
-                  <div className="text-[8.5px] tracking-[0.12em] uppercase text-cream-mute mb-0.5">
-                    {me.name}
-                  </div>
-                  <LifeStrip weeks={mine} />
-                </div>
-              )}
-              {partner && theirs && (
-                <div>
-                  <div className="text-[8.5px] tracking-[0.12em] uppercase text-cream-mute mb-0.5">
-                    {partner.name}
-                  </div>
-                  <LifeStrip weeks={theirs} />
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="text-[10.5px] text-cream-mute leading-snug mt-2">
-            {faceLine}
+          <div className="flex-1 flex items-end mt-3">
+            {mine ? (
+              <LifeCalendar weeks={mine} />
+            ) : (
+              <p className="text-[10.5px] text-cream-mute leading-snug">
+                {faceLine}
+              </p>
+            )}
           </div>
         </Card>
       </button>

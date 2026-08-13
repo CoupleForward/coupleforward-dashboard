@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BirthdaySetter } from "@/components/BirthdaySetter";
 import { Card, CardLabel } from "@/components/Card";
+import { PartnerInvite } from "@/components/PartnerInvite";
 import { ExportDataButton } from "@/components/ExportDataButton";
 import { Header } from "@/components/Header";
 import { MobileNav } from "@/components/MobileNav";
@@ -85,6 +86,18 @@ export default async function AccountPage() {
                   </div>
                 </div>
               </Card>
+
+              {!partnerMember && (
+                <Card className="mt-4">
+                  <CardLabel>Your partner</CardLabel>
+                  <div className="mt-3">
+                    <PartnerInvite
+                      coupleId={ctx.couple.id}
+                      pending={ctx.pendingInvite}
+                    />
+                  </div>
+                </Card>
+              )}
 
               <Card className="mt-4">
                 <CardLabel>Your weeks</CardLabel>
