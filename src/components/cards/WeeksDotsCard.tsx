@@ -47,6 +47,21 @@ function lifeWeeks(p: WeeksPerson, sharedWeeks: number | null): LifeWeeks | null
 }
 
 const DOT = { before: "#5b554b", together: "#c8963e", ahead: "#2f2f2f" };
+// Marker red for birthdays and the anniversary in the detail grids. The
+// "weeks left" ring uses cream (#d7cdbc), the brand's second voice next
+// to gold, hardcoded in the ring class below.
+const MARK_RED = "#c4574d";
+
+// Week index (on a life grid starting at birth) of the next annual
+// occurrence of an event date, counted from today forward.
+function nextOccurrenceIndex(birthISO: string, eventISO: string): number {
+  const birth = new Date(`${birthISO}T12:00:00`).getTime();
+  const ev = new Date(`${eventISO}T12:00:00`);
+  const now = new Date();
+  const next = new Date(now.getFullYear(), ev.getMonth(), ev.getDate(), 12);
+  if (next.getTime() < now.getTime()) next.setFullYear(next.getFullYear() + 1);
+  return Math.floor((next.getTime() - birth) / WEEK_MS);
+}
 
 function stateAt(week: number, w: LifeWeeks): keyof typeof DOT {
   if (week < w.before) return "before";
@@ -91,57 +106,92 @@ function DotCalendar({ segments }: { segments: Segment[] }) {
   );
 }
 
-// Two concentric arcs in one graphic: the outer ring is weeks lived (or
-// together), the inner ring is weeks left.
-function DoubleRing({
-  outerPct,
-  innerPct,
-  center,
-  sub,
+// Two concentric rings, each clickable: gold outer = weeks so far, cream
+// inner = weeks left. Tapping a ring puts its total in the center. Just
+// the number, nothing else (Christian's spec, 2026-08-13).
+function InteractiveRings({
+  soFar,
+  left,
 }: {
-  outerPct: number;
-  innerPct: number;
-  center: string;
-  sub: string;
+  soFar: { value: number; pct: number };
+  left: { value: number; pct: number };
 }) {
-  const arc = (r: number, pct: number, cls: string, track: boolean) => (
-    <>
-      {track && (
-        <circle
-          cx="50"
-          cy="50"
-          r={r}
-          fill="none"
-          strokeWidth="6"
-          className="stroke-line/50"
-        />
-      )}
+  const [sel, setSel] = useState<"soFar" | "left">("soFar");
+
+  const ring = (
+    r: number,
+    pct: number,
+    colorClass: string,
+    active: boolean,
+    onClick: () => void,
+    label: string,
+  ) => (
+    <g
+      onClick={onClick}
+      className="cursor-pointer"
+      role="button"
+      aria-label={label}
+      opacity={active ? 1 : 0.4}
+    >
       <circle
         cx="50"
         cy="50"
         r={r}
         fill="none"
-        strokeWidth="6"
+        strokeWidth="7"
+        className="stroke-line/50"
+      />
+      <circle
+        cx="50"
+        cy="50"
+        r={r}
+        fill="none"
+        strokeWidth="7"
         strokeLinecap="round"
         pathLength={100}
-        strokeDasharray={`${(Math.max(0, Math.min(1, pct)) * 100).toFixed(2)} 100`}
+        strokeDasharray={`${(Math.max(0.5, Math.min(1, pct) * 100)).toFixed(2)} 100`}
         transform="rotate(-90 50 50)"
-        className={cls}
+        className={colorClass}
       />
-    </>
+      {/* generous invisible hit area */}
+      <circle
+        cx="50"
+        cy="50"
+        r={r}
+        fill="none"
+        strokeWidth="14"
+        stroke="transparent"
+      />
+    </g>
   );
+
   return (
     <div className="relative">
-      <svg width="112" height="112" viewBox="0 0 100 100" aria-hidden="true">
-        {arc(44, outerPct, "stroke-gold", true)}
-        {arc(33, innerPct, "stroke-[#8a8275]", true)}
+      <svg width="118" height="118" viewBox="0 0 100 100">
+        {ring(
+          43,
+          soFar.pct,
+          "stroke-gold",
+          sel === "soFar",
+          () => setSel("soFar"),
+          "Weeks so far",
+        )}
+        {ring(
+          31,
+          left.pct,
+          "stroke-[#d7cdbc]",
+          sel === "left",
+          () => setSel("left"),
+          "Weeks left",
+        )}
       </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <div className="text-[20px] font-semibold text-cream leading-none tabular-nums">
-          {center}
-        </div>
-        <div className="text-[8px] tracking-[0.14em] uppercase text-cream-mute mt-0.5 text-center px-3">
-          {sub}
+      <div className="absolute inset-0 grid place-items-center pointer-events-none">
+        <div
+          className={`text-[21px] font-semibold leading-none tabular-nums ${
+            sel === "soFar" ? "text-gold" : "text-[#d7cdbc]"
+          }`}
+        >
+          {(sel === "soFar" ? soFar.value : left.value).toLocaleString()}
         </div>
       </div>
     </div>
@@ -149,10 +199,20 @@ function DoubleRing({
 }
 
 // The full life-in-weeks grid: 52 dots per row, one row per year of the
-// 4,000-week horizon. Rendered only while the sheet is open.
-function LifeGrid({ weeks }: { weeks: LifeWeeks }) {
+// 4,000-week horizon. Rendered only while the sheet is open. Marker weeks
+// (next birthday, next anniversary) get the red dot.
+function LifeGrid({
+  weeks,
+  markers = [],
+}: {
+  weeks: LifeWeeks;
+  markers?: number[];
+}) {
   const COLS = 52;
   const rows = Math.ceil(TOTAL_WEEKS / COLS); // 77
+  const marked = new Set(
+    markers.filter((m) => m >= 0 && m < TOTAL_WEEKS),
+  );
   return (
     <svg
       viewBox={`0 0 ${COLS} ${rows}`}
@@ -168,7 +228,7 @@ function LifeGrid({ weeks }: { weeks: LifeWeeks }) {
           width={0.72}
           height={0.72}
           rx={0.36}
-          fill={DOT[stateAt(i, weeks)]}
+          fill={marked.has(i) ? MARK_RED : DOT[stateAt(i, weeks)]}
         />
       ))}
     </svg>
@@ -176,18 +236,19 @@ function LifeGrid({ weeks }: { weeks: LifeWeeks }) {
 }
 
 function Legend() {
-  const items: { key: keyof typeof DOT; label: string }[] = [
-    { key: "before", label: "before us" },
-    { key: "together", label: "together" },
-    { key: "ahead", label: "ahead" },
+  const items: { color: string; label: string }[] = [
+    { color: DOT.before, label: "before us" },
+    { color: DOT.together, label: "together" },
+    { color: DOT.ahead, label: "ahead" },
+    { color: MARK_RED, label: "next birthday · anniversary" },
   ];
   return (
-    <div className="flex items-center gap-4 text-[10.5px] text-cream-mute">
-      {items.map(({ key, label }) => (
-        <span key={key} className="inline-flex items-center gap-1.5">
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10.5px] text-cream-mute">
+      {items.map(({ color, label }) => (
+        <span key={label} className="inline-flex items-center gap-1.5">
           <span
             className="size-[7px] rounded-full"
-            style={{ backgroundColor: DOT[key] }}
+            style={{ backgroundColor: color }}
           />
           {label}
         </span>
@@ -220,17 +281,16 @@ function WeeksFace({
     tab === "together" && togetherView ? (
       <>
         <div className="flex justify-center mt-2">
-          <DoubleRing
-            outerPct={(shared ?? 0) / TOTAL_WEEKS}
-            innerPct={(leftTogether ?? 0) / TOTAL_WEEKS}
-            center={(shared ?? 0).toLocaleString()}
-            sub="weeks together"
+          <InteractiveRings
+            soFar={{
+              value: shared ?? 0,
+              pct: (shared ?? 0) / TOTAL_WEEKS,
+            }}
+            left={{
+              value: leftTogether ?? 0,
+              pct: (leftTogether ?? 0) / TOTAL_WEEKS,
+            }}
           />
-        </div>
-        <div className="mt-1.5 text-center text-[10.5px] text-cream-mute">
-          {leftTogether !== null
-            ? `${leftTogether.toLocaleString()} weeks left, together`
-            : "Add both birthdays for your shared horizon"}
         </div>
         <div className="mt-2.5">
           <DotCalendar
@@ -252,16 +312,10 @@ function WeeksFace({
     ) : tab === "you" && mine ? (
       <>
         <div className="flex justify-center mt-2">
-          <DoubleRing
-            outerPct={mine.lived / TOTAL_WEEKS}
-            innerPct={mine.left / TOTAL_WEEKS}
-            center={mine.lived.toLocaleString()}
-            sub="weeks lived"
+          <InteractiveRings
+            soFar={{ value: mine.lived, pct: mine.lived / TOTAL_WEEKS }}
+            left={{ value: mine.left, pct: mine.left / TOTAL_WEEKS }}
           />
-        </div>
-        <div className="mt-1.5 text-center text-[10.5px] text-cream-mute">
-          {mine.left.toLocaleString()} weeks left · {mine.together.toLocaleString()}{" "}
-          of yours together
         </div>
         <div className="mt-2.5">
           <DotCalendar
@@ -311,10 +365,12 @@ function WeeksFace({
 
 export function WeeksDotsCard({
   sharedWeeks,
+  togetherSince,
   me,
   partner,
 }: {
   sharedWeeks: number | null;
+  togetherSince: string | null;
   me: WeeksPerson;
   partner: WeeksPerson | null;
 }) {
@@ -326,6 +382,15 @@ export function WeeksDotsCard({
   const theirs = partner ? lifeWeeks(partner, sharedWeeks) : null;
   const togetherAhead =
     mine && theirs ? Math.min(mine.left, theirs.left) : null;
+
+  // Red markers for the detail grids: the next birthday and the next
+  // anniversary, one dot each, placed on each person's own timeline.
+  const markersFor = (p: WeeksPerson): number[] => {
+    if (!p.birthday) return [];
+    const m = [nextOccurrenceIndex(p.birthday, p.birthday)];
+    if (togetherSince) m.push(nextOccurrenceIndex(p.birthday, togetherSince));
+    return m;
+  };
 
   const faceLine = (() => {
     if (togetherAhead !== null)
@@ -399,7 +464,7 @@ export function WeeksDotsCard({
             </div>
             {mine && (
               <DepthSection heading={`${me.name} · a life in weeks`}>
-                <LifeGrid weeks={mine} />
+                <LifeGrid weeks={mine} markers={markersFor(me)} />
                 <div className="mt-2 flex justify-between text-[11px] text-cream-mute">
                   <span>
                     {mine.lived.toLocaleString()} lived ·{" "}
@@ -413,7 +478,7 @@ export function WeeksDotsCard({
             )}
             {partner && theirs && (
               <DepthSection heading={`${partner.name} · a life in weeks`}>
-                <LifeGrid weeks={theirs} />
+                <LifeGrid weeks={theirs} markers={markersFor(partner)} />
                 <div className="mt-2 flex justify-between text-[11px] text-cream-mute">
                   <span>
                     {theirs.lived.toLocaleString()} lived ·{" "}

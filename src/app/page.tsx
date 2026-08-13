@@ -122,6 +122,7 @@ export default async function Home() {
                 <div className="grid gap-4 lg:gap-5 grid-cols-2 lg:grid-cols-4">
                   <WeeksDotsCard
                     sharedWeeks={data.sharedWeeks}
+                    togetherSince={data.couple.together_since}
                     me={{
                       name: "You",
                       birthday:
