@@ -54,10 +54,21 @@ function stateAt(week: number, w: LifeWeeks): keyof typeof DOT {
   return "ahead";
 }
 
-// Compact calendar of dots for the card face: 20 columns by 8 rows, each
-// dot standing for 25 weeks of the viewer's 4,000. Wraps like a calendar,
-// never overflows the card.
-function LifeCalendar({ weeks }: { weeks: LifeWeeks }) {
+// Compact calendar of dots: 20 columns by 8 rows, each dot standing for 25
+// weeks of the 4,000, colored by sequential segments. Wraps like a
+// calendar, never overflows the card.
+type Segment = { count: number; color: string };
+
+function segmentColorAt(week: number, segments: Segment[]): string {
+  let acc = 0;
+  for (const s of segments) {
+    acc += s.count;
+    if (week < acc) return s.color;
+  }
+  return DOT.ahead;
+}
+
+function DotCalendar({ segments }: { segments: Segment[] }) {
   const COLS = 20;
   const ROWS = 8;
   const BLOCK = TOTAL_WEEKS / (COLS * ROWS);
@@ -72,10 +83,67 @@ function LifeCalendar({ weeks }: { weeks: LifeWeeks }) {
           <span
             key={i}
             className="aspect-square w-full rounded-full"
-            style={{ backgroundColor: DOT[stateAt(mid, weeks)] }}
+            style={{ backgroundColor: segmentColorAt(mid, segments) }}
           />
         );
       })}
+    </div>
+  );
+}
+
+// Two concentric arcs in one graphic: the outer ring is weeks lived (or
+// together), the inner ring is weeks left.
+function DoubleRing({
+  outerPct,
+  innerPct,
+  center,
+  sub,
+}: {
+  outerPct: number;
+  innerPct: number;
+  center: string;
+  sub: string;
+}) {
+  const arc = (r: number, pct: number, cls: string, track: boolean) => (
+    <>
+      {track && (
+        <circle
+          cx="50"
+          cy="50"
+          r={r}
+          fill="none"
+          strokeWidth="6"
+          className="stroke-line/50"
+        />
+      )}
+      <circle
+        cx="50"
+        cy="50"
+        r={r}
+        fill="none"
+        strokeWidth="6"
+        strokeLinecap="round"
+        pathLength={100}
+        strokeDasharray={`${(Math.max(0, Math.min(1, pct)) * 100).toFixed(2)} 100`}
+        transform="rotate(-90 50 50)"
+        className={cls}
+      />
+    </>
+  );
+  return (
+    <div className="relative">
+      <svg width="112" height="112" viewBox="0 0 100 100" aria-hidden="true">
+        {arc(44, outerPct, "stroke-gold", true)}
+        {arc(33, innerPct, "stroke-[#8a8275]", true)}
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <div className="text-[20px] font-semibold text-cream leading-none tabular-nums">
+          {center}
+        </div>
+        <div className="text-[8px] tracking-[0.14em] uppercase text-cream-mute mt-0.5 text-center px-3">
+          {sub}
+        </div>
+      </div>
     </div>
   );
 }
@@ -128,6 +196,119 @@ function Legend() {
   );
 }
 
+// The card face: a Together / You tab pair. Each tab is one double-ring
+// graphic (outer arc weeks lived-or-together, inner arc weeks left) over
+// the dot calendar for the same view.
+function WeeksFace({
+  shared,
+  togetherAhead,
+  mine,
+  faceLine,
+}: {
+  shared: number | null;
+  togetherAhead: number | null;
+  mine: LifeWeeks | null;
+  faceLine: string;
+}) {
+  const [tab, setTab] = useState<"together" | "you">("together");
+
+  const togetherView = shared !== null;
+  const leftTogether =
+    togetherAhead ?? (shared !== null ? TOTAL_WEEKS - shared : null);
+
+  const content =
+    tab === "together" && togetherView ? (
+      <>
+        <div className="flex justify-center mt-2">
+          <DoubleRing
+            outerPct={(shared ?? 0) / TOTAL_WEEKS}
+            innerPct={(leftTogether ?? 0) / TOTAL_WEEKS}
+            center={(shared ?? 0).toLocaleString()}
+            sub="weeks together"
+          />
+        </div>
+        <div className="mt-1.5 text-center text-[10.5px] text-cream-mute">
+          {leftTogether !== null
+            ? `${leftTogether.toLocaleString()} weeks left, together`
+            : "Add both birthdays for your shared horizon"}
+        </div>
+        <div className="mt-2.5">
+          <DotCalendar
+            segments={[
+              { count: shared ?? 0, color: DOT.together },
+              { count: leftTogether ?? 0, color: DOT.ahead },
+              // Weeks of the 4,000 outside the shared horizon.
+              {
+                count: Math.max(
+                  0,
+                  TOTAL_WEEKS - (shared ?? 0) - (leftTogether ?? 0),
+                ),
+                color: DOT.before,
+              },
+            ]}
+          />
+        </div>
+      </>
+    ) : tab === "you" && mine ? (
+      <>
+        <div className="flex justify-center mt-2">
+          <DoubleRing
+            outerPct={mine.lived / TOTAL_WEEKS}
+            innerPct={mine.left / TOTAL_WEEKS}
+            center={mine.lived.toLocaleString()}
+            sub="weeks lived"
+          />
+        </div>
+        <div className="mt-1.5 text-center text-[10.5px] text-cream-mute">
+          {mine.left.toLocaleString()} weeks left · {mine.together.toLocaleString()}{" "}
+          of yours together
+        </div>
+        <div className="mt-2.5">
+          <DotCalendar
+            segments={[
+              { count: mine.before, color: DOT.before },
+              { count: mine.together, color: DOT.together },
+              { count: mine.left, color: DOT.ahead },
+            ]}
+          />
+        </div>
+      </>
+    ) : (
+      <p className="mt-4 text-[11px] text-cream-mute leading-snug">
+        {tab === "you"
+          ? "Add your birthday on the Account page and your weeks appear here."
+          : faceLine}
+      </p>
+    );
+
+  return (
+    <div className="flex-1 flex flex-col">
+      <div className="flex-1">{content}</div>
+      <div className="mt-3 grid grid-cols-2 gap-1.5">
+        {(
+          [
+            { key: "together", label: "Together" },
+            { key: "you", label: "You" },
+          ] as const
+        ).map(({ key, label }) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setTab(key)}
+            className={`rounded-full py-1 text-[10.5px] font-medium transition ${
+              tab === key
+                ? "bg-gold text-[#1a1a1a]"
+                : "bg-card-2/70 border border-line-soft/60 text-cream-dim hover:border-gold/40"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function WeeksDotsCard({
   sharedWeeks,
   me,
@@ -156,60 +337,28 @@ export function WeeksDotsCard({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="text-left w-full h-full"
-        aria-label="About 4,000 Weeks"
-      >
-        <Card className="flex flex-col min-h-[230px] h-full hover:border-gold/40 transition cursor-pointer">
+      <Card className="flex flex-col min-h-[230px] h-full">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="text-left w-full group"
+          aria-label="About 4,000 Weeks"
+        >
           <div className="text-[10px] tracking-[0.18em] uppercase text-cream-mute">
             4,000 Weeks
           </div>
-          <div className="text-[13px] text-cream-dim mt-0.5">
-            A life, in weeks
+          <div className="text-[13px] text-cream-dim mt-0.5 group-hover:text-gold transition">
+            A life, in weeks · details
           </div>
+        </button>
 
-          <div className="mt-3 space-y-1 text-[11px]">
-            <div className="flex justify-between gap-3">
-              <span className="text-cream-mute">Weeks together</span>
-              <span className="text-cream tabular-nums">
-                {shared !== null ? shared.toLocaleString() : "—"}
-              </span>
-            </div>
-            <div className="flex justify-between gap-3">
-              <span className="text-cream-mute">Weeks left, together</span>
-              <span className="text-cream tabular-nums">
-                {togetherAhead !== null
-                  ? togetherAhead.toLocaleString()
-                  : "—"}
-              </span>
-            </div>
-            <div className="flex justify-between gap-3">
-              <span className="text-cream-mute">Weeks lived, you</span>
-              <span className="text-cream tabular-nums">
-                {mine ? mine.lived.toLocaleString() : "—"}
-              </span>
-            </div>
-            <div className="flex justify-between gap-3">
-              <span className="text-cream-mute">Weeks left, you</span>
-              <span className="text-cream tabular-nums">
-                {mine ? mine.left.toLocaleString() : "—"}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex-1 flex items-end mt-3">
-            {mine ? (
-              <LifeCalendar weeks={mine} />
-            ) : (
-              <p className="text-[10.5px] text-cream-mute leading-snug">
-                {faceLine}
-              </p>
-            )}
-          </div>
-        </Card>
-      </button>
+        <WeeksFace
+          shared={shared}
+          togetherAhead={togetherAhead}
+          mine={mine}
+          faceLine={faceLine}
+        />
+      </Card>
 
       <DetailSheet
         open={open}
