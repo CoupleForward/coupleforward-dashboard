@@ -52,15 +52,28 @@ const DOT = { before: "#5b554b", together: "#c8963e", ahead: "#2f2f2f" };
 // to gold, hardcoded in the ring class below.
 const MARK_RED = "#c4574d";
 
-// Week index (on a life grid starting at birth) of the next annual
-// occurrence of an event date, counted from today forward.
-function nextOccurrenceIndex(birthISO: string, eventISO: string): number {
-  const birth = new Date(`${birthISO}T12:00:00`).getTime();
+// Date of the next annual occurrence of an event, from today.
+function nextOccurrence(eventISO: string): Date {
   const ev = new Date(`${eventISO}T12:00:00`);
   const now = new Date();
   const next = new Date(now.getFullYear(), ev.getMonth(), ev.getDate(), 12);
   if (next.getTime() < now.getTime()) next.setFullYear(next.getFullYear() + 1);
-  return Math.floor((next.getTime() - birth) / WEEK_MS);
+  return next;
+}
+
+// Week index (on a life grid starting at birth) of the next annual
+// occurrence of an event date, counted from today forward.
+function nextOccurrenceIndex(birthISO: string, eventISO: string): number {
+  const birth = new Date(`${birthISO}T12:00:00`).getTime();
+  return Math.floor((nextOccurrence(eventISO).getTime() - birth) / WEEK_MS);
+}
+
+// Weeks from now until the event's next occurrence.
+function weeksFromNow(eventISO: string): number {
+  return Math.max(
+    0,
+    Math.floor((nextOccurrence(eventISO).getTime() - Date.now()) / WEEK_MS),
+  );
 }
 
 function stateAt(week: number, w: LifeWeeks): keyof typeof DOT {
@@ -83,10 +96,21 @@ function segmentColorAt(week: number, segments: Segment[]): string {
   return DOT.ahead;
 }
 
-function DotCalendar({ segments }: { segments: Segment[] }) {
+function DotCalendar({
+  segments,
+  markers = [],
+}: {
+  segments: Segment[];
+  markers?: number[]; // week indices; the block holding one turns red
+}) {
   const COLS = 20;
   const ROWS = 8;
   const BLOCK = TOTAL_WEEKS / (COLS * ROWS);
+  const markedBlocks = new Set(
+    markers
+      .filter((m) => m >= 0 && m < TOTAL_WEEKS)
+      .map((m) => Math.floor(m / BLOCK)),
+  );
   return (
     <div
       className="grid gap-[3px] w-full"
@@ -98,7 +122,11 @@ function DotCalendar({ segments }: { segments: Segment[] }) {
           <span
             key={i}
             className="aspect-square w-full rounded-full"
-            style={{ backgroundColor: segmentColorAt(mid, segments) }}
+            style={{
+              backgroundColor: markedBlocks.has(i)
+                ? MARK_RED
+                : segmentColorAt(mid, segments),
+            }}
           />
         );
       })}
@@ -262,20 +290,22 @@ function Legend() {
 // the dot calendar for the same view.
 function WeeksFace({
   shared,
-  togetherAhead,
+  leftTogether,
   mine,
   faceLine,
+  togetherMarkers,
+  youMarkers,
 }: {
   shared: number | null;
-  togetherAhead: number | null;
+  leftTogether: number | null;
   mine: LifeWeeks | null;
   faceLine: string;
+  togetherMarkers: number[];
+  youMarkers: number[];
 }) {
   const [tab, setTab] = useState<"together" | "you">("together");
 
   const togetherView = shared !== null;
-  const leftTogether =
-    togetherAhead ?? (shared !== null ? TOTAL_WEEKS - shared : null);
 
   const content =
     tab === "together" && togetherView ? (
@@ -294,6 +324,7 @@ function WeeksFace({
         </div>
         <div className="mt-2.5">
           <DotCalendar
+            markers={togetherMarkers}
             segments={[
               { count: shared ?? 0, color: DOT.together },
               { count: leftTogether ?? 0, color: DOT.ahead },
@@ -319,6 +350,7 @@ function WeeksFace({
         </div>
         <div className="mt-2.5">
           <DotCalendar
+            markers={youMarkers}
             segments={[
               { count: mine.before, color: DOT.before },
               { count: mine.together, color: DOT.together },
@@ -383,6 +415,20 @@ export function WeeksDotsCard({
   const togetherAhead =
     mine && theirs ? Math.min(mine.left, theirs.left) : null;
 
+  // Weeks left together, using the tightest KNOWN bound: the shared future
+  // cannot exceed either partner's remaining weeks, so one known birthday
+  // already caps it. Only with no birthdays at all does it fall back to
+  // 4,000 minus the shared count.
+  const knownLefts = [mine?.left, theirs?.left].filter(
+    (n): n is number => n != null,
+  );
+  const leftTogether =
+    knownLefts.length > 0
+      ? Math.min(...knownLefts)
+      : shared !== null
+        ? TOTAL_WEEKS - shared
+        : null;
+
   // Red markers for the detail grids: the next birthday and the next
   // anniversary, one dot each, placed on each person's own timeline.
   const markersFor = (p: WeeksPerson): number[] => {
@@ -392,11 +438,17 @@ export function WeeksDotsCard({
     return m;
   };
 
+  // Face-calendar markers: the next anniversary on the shared timeline,
+  // and the viewer's birthday + anniversary on their own timeline.
+  const togetherMarkers =
+    togetherSince && shared !== null
+      ? [shared + weeksFromNow(togetherSince)]
+      : [];
+  const youMarkers = markersFor(me);
+
   const faceLine = (() => {
-    if (togetherAhead !== null)
-      return `about ${togetherAhead.toLocaleString()} weeks still ahead, together`;
-    if (shared !== null)
-      return `${Math.max(0, TOTAL_WEEKS - shared).toLocaleString()} of 4,000 still ahead`;
+    if (leftTogether !== null && shared !== null)
+      return `about ${leftTogether.toLocaleString()} weeks still ahead, together`;
     return "Add your together-since date to count them";
   })();
 
@@ -419,9 +471,11 @@ export function WeeksDotsCard({
 
         <WeeksFace
           shared={shared}
-          togetherAhead={togetherAhead}
+          leftTogether={leftTogether}
           mine={mine}
           faceLine={faceLine}
+          togetherMarkers={togetherMarkers}
+          youMarkers={youMarkers}
         />
       </Card>
 
