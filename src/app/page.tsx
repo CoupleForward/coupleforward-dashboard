@@ -172,17 +172,18 @@ export default async function Home() {
                   />
                 )}
                 <UpcomingCard plan={data.currentHuddle?.plan ?? null} />
+                <JournalCard
+                  coupleId={data.couple.id}
+                  initialEntries={data.journalEntries}
+                />
+                <SomaticToolsCard />
               </div>
             </div>
 
-            {/* The rail's tail, wrapped underneath the middle apps */}
-            <div className="mt-5 lg:mt-6 grid gap-5 lg:gap-6 grid-cols-1 sm:grid-cols-2">
-              <JournalCard
-                coupleId={data.couple.id}
-                initialEntries={data.journalEntries}
-              />
-              <SomaticToolsCard />
-            </div>
+            {/* LAYOUT RULE (Christian, 2026-08-13): the two columns above
+                are the dashboard. Any NEW dashboard feature from here on
+                goes in this full-width section underneath all columns,
+                wrapping as a grid — never appended to either column. */}
           </main>
         </div>
       </div>
