@@ -22,14 +22,14 @@ export type LabVideo = {
 export const LAB_VIDEOS: LabVideo[] = [
   {
     key: "couple-forward-compass",
-    vimeoId: 763235498,
+    vimeoId: 1218102002,
     title: "The Couple Forward Compass",
     description:
       "Where you are headed together, and how to find your heading again when you lose it. The full Compass teaching with Christian.",
     durationSec: 1710,
     category: "Foundations",
     thumbBase:
-      "https://i.vimeocdn.com/video/1537825022-c8a99d5417d00c9b7cc3a9eee5aa4c608c9e9007c38f53e119b66866cba8e0e6-d",
+      "https://i.vimeocdn.com/video/2189940682-697999052a352579b3997debc05654e66279f2808fa0a707d13cb41387d83ebb-d",
     featured: true,
   },
 ];
