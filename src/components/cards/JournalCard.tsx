@@ -24,6 +24,7 @@ export function JournalCard({
   const [entries, setEntries] = useState<JournalEntry[]>(initialEntries);
   const [writing, setWriting] = useState(false);
   const [draft, setDraft] = useState("");
+  const [visibility, setVisibility] = useState<"couple" | "private">("couple");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,6 +42,9 @@ export function JournalCard({
         couple_id: coupleId,
         author_id: user?.id,
         content: draft.trim(),
+        // 'couple' is the column default, so omitting it keeps inserts
+        // working even before the visibility migration is applied.
+        ...(visibility === "private" ? { visibility } : {}),
       })
       .select()
       .single();
@@ -72,8 +76,13 @@ export function JournalCard({
               key={e.id}
               className="text-[13px] text-cream-dim leading-snug line-clamp-3"
             >
-              <span className="text-cream">{fmtDate(e.created_at)}</span> —{" "}
-              {e.content}
+              <span className="text-cream">{fmtDate(e.created_at)}</span>
+              {e.visibility === "private" && (
+                <span className="ml-1.5 rounded-full bg-card-2 border border-line-soft/60 px-1.5 py-px text-[9px] uppercase tracking-wide text-cream-mute">
+                  Private
+                </span>
+              )}{" "}
+              — {e.content}
             </p>
           ))}
         </div>
@@ -89,6 +98,27 @@ export function JournalCard({
             autoFocus
             className="w-full resize-none rounded-xl bg-card-2/80 border border-line-soft/60 px-3.5 py-2.5 text-[13px] text-cream placeholder:text-cream-mute/60 focus:outline-none focus:border-gold/50 transition"
           />
+          <div className="mt-2 flex items-center gap-1.5">
+            {(
+              [
+                { v: "couple", label: "Shared with us" },
+                { v: "private", label: "Just for me" },
+              ] as const
+            ).map(({ v, label }) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setVisibility(v)}
+                className={`rounded-full px-3 py-1 text-[11px] transition ${
+                  visibility === v
+                    ? "bg-gold text-[#1a1a1a] font-semibold"
+                    : "bg-card-2/70 border border-line-soft/60 text-cream-dim hover:border-gold/40"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
           {error && (
             <p className="mt-2 text-[11.5px] text-[#e08a8a]">{error}</p>
           )}

@@ -10,14 +10,15 @@ Three taps per partner, under 15 seconds, once a day:
 → **Happiness** → how I feel about my day (1-10)
 → **Connection** → how connected I feel to you today (1-10)
 
-Mechanics:
+Mechanics (DECIDED by Christian, 2026-08-12 review):
 
-→ Each partner's answers persist individually. The dashboard shows a per-partner mood strip (your line and theirs, side by side) plus one blended **daily couple connection score**.
-→ **Weighting = average, with the gap always visible.** A 9 and a 3 average to 6, but the dashboard never shows a bare 6: it shows the 6 AND the spread, because the spread is the clinical signal. [DEFAULT, veto-able]
-→ **Both partners see both partners' answers.** Transparency matches the Huddle's ethos. [DEFAULT, veto-able → alternatives: mood private / connection shared, or weekly reveal]
-→ **The ping is in-app for now** (a daily card that asks, plus a gentle prompt state until answered). Real push notifications arrive with deploy + notification infrastructure. [DEFAULT]
-→ Missed days are simply blank. No streaks, no guilt mechanics, per the measurement doctrine: the daily is rhythm and self-report texture, never a compliance score.
-→ Solo members: same check-in, minus the connection blend (their connection score reads as their own report, labeled honestly).
+→ **Raw daily answers are PRIVATE to their author, enforced by RLS.** Both partners see the dashboard outputs only: the blended couple connection score, the gap band, check-in status, and streaks. Your own mood line is visible only to you. (Honest math note, accepted: with two people, your own connection score plus the average discloses your partner's connection score by arithmetic; mood and happiness are never blended and stay truly private.)
+→ **Weighting = average, with the gap always visible.** A 9 and a 3 average to 6, but the dashboard never shows a bare 6: it shows the 6 AND the spread, because the spread is the clinical signal. [CONFIRMED]
+→ **The ping is in-app for now**; real push notifications arrive with deploy + notification infrastructure. [CONFIRMED]
+→ **Daily check-in streaks exist alongside the Huddle streak** (his call): yours, your partner's, and a together streak (days you both checked in). Framed as rhythm, never progress, same as the Huddle streak.
+→ Solo members: same check-in; their connection score reads as their own report, labeled honestly. Solo streak is just theirs.
+
+**Journaling is two-lane (his call): private AND couple, separately.** Every entry is either shared with the couple (the default) or just-for-me, chosen at writing time, enforced by RLS. The weekly quiz's journal attachment stays optional.
 
 ## 2. The weekly quiz (draft questions → HIS RED PEN GOES HERE)
 

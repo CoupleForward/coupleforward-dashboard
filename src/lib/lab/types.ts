@@ -74,6 +74,7 @@ export type JournalEntry = {
   author_id: string | null;
   title: string | null;
   content: string;
+  visibility: "couple" | "private";
   created_at: string;
   updated_at: string;
 };

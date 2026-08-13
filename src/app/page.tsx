@@ -16,7 +16,7 @@ import { SomaticToolsCard } from "@/components/cards/SomaticToolsCard";
 import { UpcomingCard } from "@/components/cards/UpcomingCard";
 import { WeeklyPromptCard } from "@/components/cards/WeeklyPromptCard";
 import { WeeksDotsCard } from "@/components/cards/WeeksDotsCard";
-import { getDailyCheckins } from "@/lib/lab/checkins";
+import { getDailyData } from "@/lib/lab/checkins";
 import { coupleDisplayName, getDashboardData, getLabContext } from "@/lib/lab/data";
 import { weekStart } from "@/lib/lab/week";
 
@@ -31,13 +31,11 @@ export default async function Home() {
   const thisWeek = weekStart();
   // Null until migration 20260812150000 is applied; the daily surfaces
   // stay dark until then, no code change needed.
-  const checkins = await getDailyCheckins(ctx.couple.id);
-  const memberNames = Object.fromEntries(
-    data.members.map((m) => [
-      m.user_id,
-      (m.display_name ?? "").split(" ")[0] || "Partner",
-    ]),
-  );
+  const daily = await getDailyData();
+  const partner = data.members.find((m) => m.user_id !== data.userId);
+  const partnerName = partner
+    ? (partner.display_name ?? "").split(" ")[0] || "Partner"
+    : null;
 
   const connectionScore =
     data.latestScores.length > 0
@@ -134,19 +132,21 @@ export default async function Home() {
 
               {/* Right column */}
               <div className="lg:col-span-4 space-y-5 lg:space-y-6">
-                {checkins && (
+                {daily && (
                   <DailyCheckinCard
                     coupleId={data.couple.id}
                     userId={data.userId}
-                    todayRows={checkins.today}
-                    memberNames={memberNames}
+                    today={daily.today}
+                    partnerName={partnerName}
+                    hasPartner={data.members.length > 1}
+                    streaks={daily.streaks}
                   />
                 )}
-                {checkins && checkins.recent.length > 0 && (
+                {daily && daily.rows.length > 0 && (
                   <DailyTrendsCard
-                    recent={checkins.recent}
-                    userId={data.userId}
-                    memberNames={memberNames}
+                    rows={daily.rows}
+                    streaks={daily.streaks}
+                    hasPartner={data.members.length > 1}
                   />
                 )}
                 <JourneyCard />

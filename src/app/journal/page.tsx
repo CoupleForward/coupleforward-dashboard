@@ -87,6 +87,11 @@ export default async function JournalPage() {
                       <div className="flex items-baseline justify-between gap-3">
                         <span className="text-[12px] text-cream">
                           {fmtDate(e.created_at)}
+                          {e.visibility === "private" && (
+                            <span className="ml-2 rounded-full bg-card-2 border border-line-soft/60 px-1.5 py-px text-[9px] uppercase tracking-wide text-cream-mute">
+                              Private · only you
+                            </span>
+                          )}
                         </span>
                         <span className="text-[10px] tracking-[0.14em] uppercase text-gold">
                           {nameFor(e.author_id)}
